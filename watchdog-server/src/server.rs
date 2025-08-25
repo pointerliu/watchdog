@@ -1,6 +1,6 @@
 use actix::prelude::*;
 use std::time::Duration;
-use subscription_framework::{
+use watchdog::{
     fetcher::{FetchResult, Fetcher},
     notifier::{Notification, Notifier},
     subscription::{Subscription, SubscriptionCriteria, SubscriptionManager},

@@ -1,7 +1,7 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use subscription_framework::{
+use watchdog::{
     fetcher::{FetchResult, Fetcher},
     notifier::Notifier,
 };
@@ -133,7 +133,7 @@ pub struct ArxivNotifier;
 impl Notifier<ArxivPaper> for ArxivNotifier {
     async fn send(
         &self,
-        notification: subscription_framework::notifier::Notification<ArxivPaper>,
+        notification: watchdog::notifier::Notification<ArxivPaper>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         println!(
             "=== New arXiv Paper Alert ===\n\

@@ -1,4 +1,4 @@
-# Subscription Framework
+# Watchdog
 
 This crate provides the core functionality for managing subscriptions, including:
 

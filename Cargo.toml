@@ -1,8 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-    "subscription-framework-lib",
-    "subscription-server-bin",
+    "watchdog",
+    "watchdog-server",
+    "watchdog-arxiv",
 ]
 
 [workspace.package]
@@ -10,7 +11,8 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
-subscription-framework = { path = "subscription-framework-lib" }
+watchdog = { path = "watchdog" }
+watchdog-server = { path = "watchdog-server" }
 
 [profile.release]
 lto = true

@@ -1,12 +1,13 @@
 [package]
-name = "subscription-server"
+name = "watchdog-arxiv"
 version = "0.1.0"
 edition = "2021"
-description = "Server implementation using the subscription framework"
+description = "ArXiv subscription service example using the watchdog framework"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-subscription-framework = { workspace = true }
+watchdog-server = { workspace = true }
+watchdog = { workspace = true }
 tokio = { version = "1.0", features = ["full"] }
 actix = "0.13"
 serde = { version = "1.0", features = ["derive"] }
@@ -18,6 +19,3 @@ async-trait = "0.1"
 arxiv-rs = "0.1.5"
 derive_builder = "0.13"
 chrono = { version = "0.4", features = ["serde"] }
-
-[dev-dependencies]
-tokio-test = "0.4"

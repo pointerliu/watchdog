@@ -1,9 +1,10 @@
 # Subscription Service Workspace
 
-This workspace contains two crates that work together to provide a subscription service:
+This workspace contains three crates that work together to provide a subscription service:
 
-- `subscription-framework-lib`: A library crate that provides the core functionality for managing subscriptions
-- `subscription-server-bin`: A binary crate that provides a server implementation using the framework
+- `watchdog`: A library crate that provides the core functionality for managing subscriptions
+- `watchdog-server`: A library crate that provides a server implementation using the watchdog framework
+- `watchdog-arxiv`: A binary crate that provides an example implementation using the watchdog crates
 
 ## Structure
 
@@ -21,8 +22,8 @@ To build all crates in the workspace:
 cargo build
 ```
 
-To run the server:
+To run the example:
 
 ```bash
-cargo run -p subscription-server
+cargo run
 ```

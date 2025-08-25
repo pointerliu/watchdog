@@ -1,5 +1,5 @@
 [package]
-name = "subscription-framework"
+name = "watchdog"
 version = "0.1.0"
 edition = "2021"
 description = "Core framework for managing subscriptions"

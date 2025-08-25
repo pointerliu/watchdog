@@ -1,10 +1,13 @@
 use actix::prelude::*;
 use serde::{Deserialize, Serialize};
-use subscription_framework::subscription::{Subscription, SubscriptionCriteria};
-use subscription_server::arxiv::{ArxivFetcher, ArxivFetcherBuilder, ArxivNotifier, ArxivPaper};
-use subscription_server::{
+use watchdog::subscription::{Subscription, SubscriptionCriteria};
+use watchdog_server::{
     AddSubscriptionMsg, RemoveSubscriptionMsg, ServerConfig, ShutdownMsg, SubscriptionServer,
 };
+
+// Import arxiv components from the local crate
+mod arxiv;
+use arxiv::{ArxivFetcher, ArxivFetcherBuilder, ArxivNotifier, ArxivPaper};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct ArxivCriteria {

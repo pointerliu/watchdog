@@ -1,5 +1,4 @@
 pub mod server;
-pub mod arxiv;
 
 pub use server::{
     SubscriptionServer, 
@@ -7,11 +6,4 @@ pub use server::{
     AddSubscriptionMsg, 
     RemoveSubscriptionMsg, 
     ShutdownMsg
-};
-
-pub use arxiv::{
-    ArxivFetcher,
-    ArxivFetcherBuilder,
-    ArxivPaper,
-    ArxivNotifier,
 };

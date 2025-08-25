@@ -1,4 +1,4 @@
-use subscription_framework::subscription::{Subscription, SubscriptionCriteria, SubscriptionManager};
+use watchdog::subscription::{Subscription, SubscriptionCriteria, SubscriptionManager};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 struct TestCriteria {

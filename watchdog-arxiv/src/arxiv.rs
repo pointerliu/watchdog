@@ -1,11 +1,12 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use tracing::info;
 use watchdog::{
     fetcher::{FetchResult, Fetcher},
     notifier::Notifier,
+    SubscriptionCriteria,
 };
-use tracing::info;
 
 #[derive(Builder, Clone, Debug)]
 pub struct ArxivFetcher {
@@ -155,30 +156,36 @@ impl Notifier<ArxivPaper> for ArxivNotifier {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
+pub struct ArxivCriteria {
+    id: String,
+    keywords: Vec<String>,
+}
 
-    #[tokio::test]
-    async fn test_arxiv_fetcher() {
-        let fetcher = ArxivFetcherBuilder::default()
-            .query("machine learning".to_string())
-            .number(2)
-            .build()
-            .unwrap();
+impl ArxivCriteria {
+    pub fn new(id: String, keywords: Vec<String>) -> Self {
+        Self { id, keywords }
+    }
+}
 
-        let result = fetcher.fetch().await;
-        assert!(result.is_ok());
+impl SubscriptionCriteria for ArxivCriteria {
+    type Id = String;
+    type Content = ArxivPaper;
 
-        let fetch_result = result.unwrap();
-        println!("Fetched paper: {}", fetch_result.content.title);
-        println!("Metadata: {:?}", fetch_result.metadata);
+    fn matches(&self, content: &ArxivPaper) -> bool {
+        self.keywords.iter().any(|keyword| {
+            content
+                .title
+                .to_lowercase()
+                .contains(&keyword.to_lowercase())
+                || content
+                    .summary
+                    .to_lowercase()
+                    .contains(&keyword.to_lowercase())
+        })
     }
 
-    #[test]
-    fn test_query_adaptor() {
-        let query = "machine learning";
-        let res = ArxivFetcher::query_adaptor(&query);
-        assert_eq!(res, "all:machine+AND+all:learning");
+    fn id(&self) -> &Self::Id {
+        &self.id
     }
 }

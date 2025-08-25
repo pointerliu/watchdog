@@ -1,3 +1,4 @@
+use crate::arxiv::*;
 use actix::prelude::*;
 use serde::{Deserialize, Serialize};
 use watchdog::subscription::{Subscription, SubscriptionCriteria};
@@ -7,41 +8,6 @@ use watchdog_server::{
 
 // Import arxiv components from the local crate
 mod arxiv;
-use arxiv::{ArxivFetcher, ArxivFetcherBuilder, ArxivNotifier, ArxivPaper};
-
-#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
-pub struct ArxivCriteria {
-    id: String,
-    keywords: Vec<String>,
-}
-
-impl ArxivCriteria {
-    pub fn new(id: String, keywords: Vec<String>) -> Self {
-        Self { id, keywords }
-    }
-}
-
-impl SubscriptionCriteria for ArxivCriteria {
-    type Id = String;
-    type Content = ArxivPaper;
-
-    fn matches(&self, content: &ArxivPaper) -> bool {
-        self.keywords.iter().any(|keyword| {
-            content
-                .title
-                .to_lowercase()
-                .contains(&keyword.to_lowercase())
-                || content
-                    .summary
-                    .to_lowercase()
-                    .contains(&keyword.to_lowercase())
-        })
-    }
-
-    fn id(&self) -> &Self::Id {
-        &self.id
-    }
-}
 
 #[actix::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

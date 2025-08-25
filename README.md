@@ -27,3 +27,8 @@ To run the example:
 ```bash
 cargo run
 ```
+
+# Acknowledgement
+
+This project is mainly developed with the help of [qwen-code](https://github.com/QwenLM/qwen-code).
+

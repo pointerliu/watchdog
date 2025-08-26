@@ -13,3 +13,4 @@ async-trait = "0.1"
 thiserror = "1.0"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+lettre = { version = "0.10", features = ["tokio1", "tokio1-native-tls", "smtp-transport"] }

@@ -4,7 +4,7 @@ pub mod fetcher;
 pub mod storage;
 
 pub use subscription::{Subscription, SubscriptionManager, SubscriptionCriteria};
-pub use notifier::{Notifier, Notification, ConsoleNotifier};
+pub use notifier::{Notifier, Notification, ConsoleNotifier, EmailNotifier};
 pub use fetcher::{Fetcher, FetchResult};
 pub use storage::{Storage, StorageError, InMemoryStorage};
 
@@ -18,4 +18,6 @@ pub enum FrameworkError {
     Network(String),
     #[error("Custom error: {0}")]
     Custom(String),
+    #[error("Email error: {0}")]
+    Email(String),
 }

@@ -5,7 +5,7 @@
 
 use actix_web::{
     web::{self, Data, Json, Path},
-    Result as ActixResult, Scope,
+    Result as ActixResult, Scope, HttpRequest,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -113,14 +113,15 @@ pub trait SubscriptionService<C: SubscriptionCriteria + Clone + Send + Sync> {
 
 /// API handler for creating a new subscription
 pub async fn create_subscription<C, S>(
+    _req: HttpRequest,
     service: Data<Arc<RwLock<S>>>,
-    req: Json<CreateSubscriptionRequest<C>>,
+    json_req: Json<CreateSubscriptionRequest<C>>,
 ) -> ActixResult<Json<ApiResponse<SubscriptionResponse>>>
 where
     C: SubscriptionCriteria + Clone + Send + Sync + for<'de> Deserialize<'de> + Serialize + 'static,
     S: SubscriptionService<C> + Send + Sync + 'static,
 {
-    let subscription = Subscription::new(req.user_id.clone(), req.criteria.clone());
+    let subscription = Subscription::new(json_req.user_id.clone(), json_req.criteria.clone());
     
     match service.read().await.add_subscription(subscription).await {
         Ok(()) => Ok(Json(ApiResponse::success(SubscriptionResponse {
@@ -135,6 +136,7 @@ where
 
 /// API handler for removing a subscription
 pub async fn remove_subscription<C, S>(
+    _req: HttpRequest,
     service: Data<Arc<RwLock<S>>>,
     path: Path<String>,
 ) -> ActixResult<Json<ApiResponse<SubscriptionResponse>>>
@@ -159,6 +161,7 @@ where
 
 /// API handler for getting a subscription
 pub async fn get_subscription<C, S>(
+    _req: HttpRequest,
     service: Data<Arc<RwLock<S>>>,
     path: Path<String>,
 ) -> ActixResult<Json<ApiResponse<SubscriptionDetailsResponse<C>>>>
@@ -186,6 +189,7 @@ where
 
 /// API handler for listing all subscriptions
 pub async fn list_subscriptions<C, S>(
+    _req: HttpRequest,
     service: Data<Arc<RwLock<S>>>,
 ) -> ActixResult<Json<ApiResponse<Vec<SubscriptionDetailsResponse<C>>>>>
 where

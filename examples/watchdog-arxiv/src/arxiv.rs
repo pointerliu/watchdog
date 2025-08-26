@@ -37,6 +37,12 @@ pub struct ArxivPaper {
     pub link: String,
 }
 
+impl std::fmt::Display for ArxivPaper {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} - {} by {}", self.title, self.summary, self.authors.join(", "))
+    }
+}
+
 #[async_trait::async_trait]
 impl Fetcher<ArxivPaper> for ArxivFetcher {
     async fn fetch(
@@ -126,7 +132,7 @@ impl ArxivFetcher {
     }
 }
 
-// A simple notifier for arXiv papers
+// A simple notifier for arXiv papers (console output)
 #[derive(Clone)]
 pub struct ArxivNotifier;
 

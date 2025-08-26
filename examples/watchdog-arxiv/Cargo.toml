@@ -13,6 +13,14 @@ path = "src/main.rs"
 name = "watchdog-arxiv-api"
 path = "src/api_server.rs"
 
+[[bin]]
+name = "watchdog-arxiv-complete"
+path = "src/complete_server.rs"
+
+[[bin]]
+name = "email-notifier-example"
+path = "src/email_notifier_example.rs"
+
 [dependencies]
 watchdog-server = { workspace = true }
 watchdog = { workspace = true }

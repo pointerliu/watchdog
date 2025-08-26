@@ -1,9 +1,11 @@
 pub mod server;
 pub mod api;
 pub mod service;
+pub mod user;
 
 pub use server::{
-    SubscriptionServer, 
+    SubscriptionWorker,
+    SubscriptionServer,
     ServerConfig, 
     AddSubscriptionMsg, 
     RemoveSubscriptionMsg, 
@@ -17,6 +19,8 @@ pub use api::{
     SubscriptionService,
 };
 pub use service::{
-    ActorSubscriptionService,
     StorageSubscriptionService,
+};
+pub use user::{
+    UserEmailService,
 };

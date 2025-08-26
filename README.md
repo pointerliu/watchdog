@@ -24,7 +24,7 @@ cargo build
 
 ## Running the Examples
 
-### Traditional Actor-Based Server
+### Multi-User Actor-Based Server
 
 ```bash
 cargo run --bin watchdog-arxiv
@@ -38,14 +38,23 @@ cargo run --bin watchdog-arxiv-api
 
 The API server will start on `http://localhost:8080` with the following endpoints:
 - `GET /health` - Health check
-- `POST /api/v1/subscriptions` - Create a subscription
-- `GET /api/v1/subscriptions` - List all subscriptions
-- `GET /api/v1/subscriptions/{id}` - Get a specific subscription
-- `DELETE /api/v1/subscriptions/{id}` - Delete a subscription
+- `POST /api/v1/subscriptions` - Create a subscription (requires X-User-ID header)
+- `GET /api/v1/subscriptions` - List all subscriptions (requires X-User-ID header)
+- `GET /api/v1/subscriptions/{id}` - Get a specific subscription (requires X-User-ID header)
+- `DELETE /api/v1/subscriptions/{id}` - Delete a subscription (requires X-User-ID header)
 
 See the [watchdog-arxiv README](examples/watchdog-arxiv/README.md) for detailed API documentation and usage examples.
+
+## Architecture Changes
+
+The `watchdog-server` crate has been updated to support multi-user scenarios:
+
+- `SubscriptionServer`: Now manages multiple user workers
+- `SubscriptionWorker`: Handles subscriptions for individual users
+- Each user can have their own fetcher and notifier configurations
+
+This allows for more scalable and flexible subscription management where different users can have different content sources and notification methods.
 
 # Acknowledgement
 
 This project is mainly developed with the help of [qwen-code](https://github.com/QwenLM/qwen-code).
-

@@ -16,8 +16,7 @@ use watchdog_server::{
     AddSubscriptionMsg, ServerConfig,
 };
 // Import arxiv components from the local crate
-mod arxiv;
-use arxiv::{ArxivFetcher, ArxivFetcherBuilder, ArxivCriteria, ArxivNotifier};
+use watchdog_arxiv::{ArxivFetcher, ArxivFetcherBuilder, ArxivCriteria, ArxivNotifier};
 
 #[derive(Debug, Serialize)]
 struct HealthResponse {

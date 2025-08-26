@@ -6,20 +6,12 @@ description = "ArXiv subscription service example using the watchdog framework"
 license = "MIT OR Apache-2.0"
 
 [[bin]]
-name = "watchdog-arxiv"
-path = "src/main.rs"
-
-[[bin]]
-name = "watchdog-arxiv-api"
-path = "src/api_server.rs"
-
-[[bin]]
 name = "watchdog-arxiv-complete"
-path = "src/complete_server.rs"
+path = "src/bin/complete_server.rs"
 
 [[bin]]
 name = "email-notifier-example"
-path = "src/email_notifier_example.rs"
+path = "src/bin/email_notifier_example.rs"
 
 [dependencies]
 watchdog-server = { workspace = true }

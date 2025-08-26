@@ -7,8 +7,7 @@ use watchdog_server::{
     AddSubscriptionMsg, ServerConfig, ShutdownMsg,
 };
 // Import arxiv components from the local crate
-mod arxiv;
-use arxiv::{ArxivFetcher, ArxivFetcherBuilder, ArxivCriteria};
+use watchdog_arxiv::{ArxivFetcher, ArxivFetcherBuilder, ArxivCriteria};
 
 #[actix::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -55,7 +54,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .send(AddUserWorkerMsg {
             user_id: "ml_researcher".to_string(),
             fetcher,
-            // notifier: console_notifier,
             notifier: email_notifier,
             phantom: std::marker::PhantomData,
         })

@@ -11,6 +11,9 @@ pub use server::{
     RemoveSubscriptionMsg, 
     GetSubscriptionMsg,
     ListSubscriptionsMsg,
+    AddNotifierMsg,
+    RemoveNotifierMsg,
+    ListNotifiersMsg,
     ShutdownMsg
 };
 pub use api::{

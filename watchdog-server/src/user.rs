@@ -15,7 +15,6 @@ use tokio::sync::RwLock;
 /// Request to set a user's email address
 #[derive(Deserialize, Serialize, Clone)]
 pub struct SetUserEmailRequest {
-    pub user_id: String,
     pub email: String,
 }
 
@@ -75,9 +74,11 @@ impl Default for UserEmailService {
 /// API handler for setting a user's email address
 pub async fn set_user_email(
     service: Data<Arc<RwLock<UserEmailService>>>,
+    path: Path<String>,
     req: Json<SetUserEmailRequest>,
 ) -> ActixResult<Json<crate::api::ApiResponse<UserEmailResponse>>> {
-    match service.read().await.set_user_email(req.user_id.clone(), req.email.clone()).await {
+    let user_id = path.into_inner();
+    match service.read().await.set_user_email(user_id.clone(), req.email.clone()).await {
         Ok(()) => Ok(Json(crate::api::ApiResponse::success(UserEmailResponse {
             message: "User email set successfully".to_string(),
         }))),

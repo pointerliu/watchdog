@@ -1,6 +1,6 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use tracing::info;
 use watchdog::{
     fetcher::{FetchResult, Fetcher},
@@ -181,13 +181,9 @@ impl SubscriptionCriteria for ArxivCriteria {
     fn matches(&self, content: &ArxivPaper) -> bool {
         self.keywords.iter().any(|keyword| {
             content
-                .title
-                .to_lowercase()
+                .categories.iter().map(|s| s.to_lowercase())
+                .collect::<Vec<_>>()
                 .contains(&keyword.to_lowercase())
-                || content
-                    .summary
-                    .to_lowercase()
-                    .contains(&keyword.to_lowercase())
         })
     }
 

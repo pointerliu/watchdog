@@ -8,7 +8,7 @@ use tokio::sync::RwLock;
 
 /// Represents a notification to be sent to a user
 #[derive(Debug, Clone)]
-pub struct Notification<T> {
+pub struct Notification<T: Clone> {
     pub user_id: String,
     pub title: String,
     pub content: T,
@@ -17,7 +17,7 @@ pub struct Notification<T> {
 
 /// A trait for sending notifications
 #[async_trait::async_trait]
-pub trait Notifier<T>: Send + Sync 
+pub trait Notifier<T: Clone>: Send + Sync 
 where 
     T: Send + Sync + 'static
 {
@@ -30,7 +30,7 @@ where
 pub struct ConsoleNotifier;
 
 #[async_trait::async_trait]
-impl<T: std::fmt::Display + Send + Sync + 'static> Notifier<T> for ConsoleNotifier {
+impl<T: std::fmt::Display + Clone + Send + Sync + 'static> Notifier<T> for ConsoleNotifier {
     async fn send(&self, notification: Notification<T>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         println!(
             "Notification to {}: {} - {} (at {})",
@@ -83,7 +83,7 @@ impl EmailNotifier {
 }
 
 #[async_trait::async_trait]
-impl<T: std::fmt::Display + Send + Sync + 'static> Notifier<T> for EmailNotifier {
+impl<T: std::fmt::Display + Clone + Send + Sync + 'static> Notifier<T> for EmailNotifier {
     async fn send(&self, notification: Notification<T>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Get the user's email address
         let email = {

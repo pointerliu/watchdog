@@ -2,11 +2,13 @@ pub mod subscription;
 pub mod notifier;
 pub mod fetcher;
 pub mod storage;
+pub mod composite_notifier;
 
 pub use subscription::{Subscription, SubscriptionManager, SubscriptionCriteria};
 pub use notifier::{Notifier, Notification, ConsoleNotifier, EmailNotifier};
 pub use fetcher::{Fetcher, FetchResult};
 pub use storage::{Storage, StorageError, InMemoryStorage};
+pub use composite_notifier::CompositeNotifier;
 
 #[derive(Debug, thiserror::Error)]
 pub enum FrameworkError {

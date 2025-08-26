@@ -13,6 +13,14 @@ path = "src/bin/complete_server.rs"
 name = "email-notifier-example"
 path = "src/bin/email_notifier_example.rs"
 
+[[bin]]
+name = "test-email"
+path = "src/bin/test_email.rs"
+
+[[bin]]
+name = "test-email-env"
+path = "src/bin/test_email_env.rs"
+
 [dependencies]
 watchdog-server = { workspace = true }
 watchdog = { workspace = true }
@@ -29,3 +37,4 @@ async-trait = "0.1"
 arxiv-rs = "0.1.5"
 derive_builder = "0.13"
 chrono = { version = "0.4", features = ["serde"] }
+lettre = "0.10"

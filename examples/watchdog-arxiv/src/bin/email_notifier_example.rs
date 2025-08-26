@@ -1,7 +1,7 @@
 //! Example of using the EmailNotifier with the watchdog framework
 
 use actix::prelude::*;
-use watchdog::{notifier::ConsoleNotifier, subscription::Subscription, EmailNotifier};
+use watchdog::{subscription::Subscription, EmailNotifier};
 use watchdog_server::{
     server::{SubscriptionServer, AddUserWorkerMsg},
     AddSubscriptionMsg, ServerConfig, ShutdownMsg,
@@ -15,32 +15,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Starting EmailNotifier example...");
 
-    // Note: To run this example, you need to configure real SMTP settings
-    // For demonstration purposes, we'll show how to set it up
-    
-    // Create EmailNotifier with your SMTP settings
-    // Replace these with your actual SMTP configuration:
-
+    // Create EmailNotifier with 163 SMTP settings
+    // IMPORTANT: 
+    // 1. You need to enable SMTP in your 163 email settings
+    // 2. Use an app password, not your regular password
+    // 3. Replace the placeholders with your actual credentials
     let email_notifier = EmailNotifier::new(
-        "smtp.example.com".to_string(),     // SMTP server
-        587,                                // SMTP port
-        "your-email@example.com".to_string(), // SMTP username
-        "your-password".to_string(),        // SMTP password
+        "smtp.163.com".to_string(),         // 163 SMTP server
+        465,                                // SMTP port (SSL) - try 994 if this doesn't work
+        "ellen7ions@163.com".to_string(),   // Replace with your actual 163 email address
+        "GWWzTPZs5XQ4Y5PU".to_string(),    // Replace with your 163 app password (not regular password)
     );
     
-    // Set user email addresses
-    email_notifier.set_user_email("user1".to_string(), "user1@example.com".to_string()).await;
-    email_notifier.set_user_email("user2".to_string(), "user2@example.com".to_string()).await;
-
+    // Set user email addresses - sending notifications to ellen7ions@163.com
+    email_notifier.set_user_email("ml_researcher".to_string(), "ellen7ions@163.com".to_string()).await;
     
-    // For this example, we'll use a console notifier to show how it would work
-    let console_notifier = ConsoleNotifier;
+    // Check if credentials are properly set
+    if email_notifier.smtp_username == "YOUR_ACTUAL_163_EMAIL@163.com" || 
+       email_notifier.smtp_password == "YOUR_163_APP_PASSWORD" {
+        println!("⚠️  Please update the email credentials in the source code!");
+        println!("   Replace 'YOUR_ACTUAL_163_EMAIL@163.com' with your actual 163 email address");
+        println!("   Replace 'YOUR_163_APP_PASSWORD' with your 163 app password");
+        return Ok(());
+    }
     
     // Create server config
     let config = ServerConfig::default();
     
-    // Create and start the multi-user server
-    let server = SubscriptionServer::<ArxivFetcher, ConsoleNotifier, ArxivCriteria>::new(config);
+    // Create and start the multi-user server - now with EmailNotifier type
+    let server = SubscriptionServer::<ArxivFetcher, EmailNotifier, ArxivCriteria>::new(config);
     let server_addr = server.start();
     
     // Add a user worker
@@ -72,6 +75,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("EmailNotifier example running. Press Ctrl+C to stop.");
+    println!("If you get authentication errors, try running the test-email binary first:");
+    println!("  cargo run --bin test-email");
     
     // Run for a while to demonstrate
     tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;

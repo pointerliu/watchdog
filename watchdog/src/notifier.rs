@@ -46,8 +46,8 @@ pub struct EmailNotifier {
     /// SMTP server configuration
     smtp_server: String,
     smtp_port: u16,
-    smtp_username: String,
-    smtp_password: String,
+    pub smtp_username: String,
+    pub smtp_password: String,
     /// User email addresses mapping user_id to email
     user_emails: Arc<RwLock<HashMap<String, String>>>,
 }

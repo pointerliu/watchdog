@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use std::time::Duration;
 use watchdog::{
-    fetcher::{FetchResult, Fetcher},
+    fetcher::Fetcher,
     notifier::{Notification, Notifier},
     subscription::{Subscription, SubscriptionCriteria, SubscriptionManager},
 };
@@ -35,6 +35,18 @@ pub struct AddSubscriptionMsg<C: SubscriptionCriteria> {
 pub struct RemoveSubscriptionMsg<C: SubscriptionCriteria> {
     pub id: C::Id,
 }
+
+/// Message to get a subscription
+#[derive(Message)]
+#[rtype(result = "Option<Subscription<C>>")]
+pub struct GetSubscriptionMsg<C: SubscriptionCriteria + 'static> {
+    pub id: C::Id,
+}
+
+/// Message to list all subscriptions
+#[derive(Message)]
+#[rtype(result = "Vec<Subscription<C>>")]
+pub struct ListSubscriptionsMsg<C: SubscriptionCriteria + 'static>(pub std::marker::PhantomData<C>);
 
 /// Message to shutdown the server
 #[derive(Message)]
@@ -134,6 +146,42 @@ where
     fn handle(&mut self, msg: RemoveSubscriptionMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
         self.subscription_manager.remove_subscription(&msg.id);
         info!("Removed subscription");
+    }
+}
+
+// Handle GetSubscription message
+impl<F, N, C> Handler<GetSubscriptionMsg<C>> for SubscriptionServer<F, N, C>
+where
+    F: Fetcher<C::Content> + Clone + Unpin + 'static,
+    N: Notifier<C::Content> + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
+    C::Content: Clone + Unpin + Send + Sync + 'static,
+{
+    type Result = Option<Subscription<C>>;
+
+    fn handle(&mut self, msg: GetSubscriptionMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
+        self.subscription_manager.get_subscription(&msg.id).cloned()
+    }
+}
+
+// Handle ListSubscriptions message
+impl<F, N, C> Handler<ListSubscriptionsMsg<C>> for SubscriptionServer<F, N, C>
+where
+    F: Fetcher<C::Content> + Clone + Unpin + 'static,
+    N: Notifier<C::Content> + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
+    C::Content: Clone + Unpin + Send + Sync + 'static,
+{
+    type Result = Vec<Subscription<C>>;
+
+    fn handle(&mut self, _msg: ListSubscriptionsMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
+        self.subscription_manager
+            .get_subscriptions()
+            .values()
+            .cloned()
+            .collect()
     }
 }
 

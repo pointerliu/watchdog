@@ -22,11 +22,28 @@ To build all crates in the workspace:
 cargo build
 ```
 
-To run the example:
+## Running the Examples
+
+### Traditional Actor-Based Server
 
 ```bash
-cargo run
+cargo run --bin watchdog-arxiv
 ```
+
+### HTTP API Server
+
+```bash
+cargo run --bin watchdog-arxiv-api
+```
+
+The API server will start on `http://localhost:8080` with the following endpoints:
+- `GET /health` - Health check
+- `POST /api/v1/subscriptions` - Create a subscription
+- `GET /api/v1/subscriptions` - List all subscriptions
+- `GET /api/v1/subscriptions/{id}` - Get a specific subscription
+- `DELETE /api/v1/subscriptions/{id}` - Delete a subscription
+
+See the [watchdog-arxiv README](examples/watchdog-arxiv/README.md) for detailed API documentation and usage examples.
 
 # Acknowledgement
 

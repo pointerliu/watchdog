@@ -1,7 +1,6 @@
 use crate::arxiv::*;
 use actix::prelude::*;
-use serde::{Deserialize, Serialize};
-use watchdog::subscription::{Subscription, SubscriptionCriteria};
+use watchdog::subscription::Subscription;
 use watchdog_server::{
     AddSubscriptionMsg, RemoveSubscriptionMsg, ServerConfig, ShutdownMsg, SubscriptionServer,
 };

@@ -13,10 +13,6 @@ path = "src/bin/complete_server.rs"
 name = "email-notifier-example"
 path = "src/bin/email_notifier_example.rs"
 
-[[bin]]
-name = "test-email-env"
-path = "src/bin/test_email_env.rs"
-
 [dependencies]
 watchdog-service = { workspace = true }
 watchdog-core = { workspace = true }

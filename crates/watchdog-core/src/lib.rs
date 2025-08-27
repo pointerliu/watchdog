@@ -1,19 +1,14 @@
+pub mod fetchers;
+pub mod notifiers;
 pub mod subscription;
-pub mod notifier;
-pub mod fetcher;
-pub mod storage;
-pub mod composite_notifier;
 
-pub use subscription::{Subscription, SubscriptionManager, SubscriptionCriteria};
-pub use notifier::{Notifier, Notification, ConsoleNotifier, EmailNotifier};
-pub use fetcher::{Fetcher, FetchResult};
-pub use storage::{Storage, StorageError, InMemoryStorage};
-pub use composite_notifier::CompositeNotifier;
+pub use fetchers::{FetchResult, Fetcher};
+pub use notifiers::composition::CompositeNotifier;
+pub use notifiers::{ConsoleNotifier, EmailNotifier, Notification, Notifier};
+pub use subscription::{Subscription, SubscriptionCriteria, SubscriptionManager};
 
 #[derive(Debug, thiserror::Error)]
 pub enum FrameworkError {
-    #[error("Storage error: {0}")]
-    Storage(#[from] StorageError),
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
     #[error("Network error: {0}")]

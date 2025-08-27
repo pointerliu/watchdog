@@ -1,44 +1,9 @@
-use lettre::{
-    transport::smtp::authentication::Credentials,
-    AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
-};
+use crate::{Notification, Notifier};
+use lettre::transport::smtp::authentication::Credentials;
+use lettre::{AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-
-/// Represents a notification to be sent to a user
-#[derive(Debug, Clone)]
-pub struct Notification<T: Clone> {
-    pub user_id: String,
-    pub title: String,
-    pub content: T,
-    pub timestamp: u64,
-}
-
-/// A trait for sending notifications
-#[async_trait::async_trait]
-pub trait Notifier<T: Clone>: Send + Sync 
-where 
-    T: Send + Sync + 'static
-{
-    /// Send a notification to a user
-    async fn send(&self, notification: Notification<T>) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
-}
-
-/// A simple console notifier for testing
-#[derive(Clone)]
-pub struct ConsoleNotifier;
-
-#[async_trait::async_trait]
-impl<T: std::fmt::Display + Clone + Send + Sync + 'static> Notifier<T> for ConsoleNotifier {
-    async fn send(&self, notification: Notification<T>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        println!(
-            "Notification to {}: {} - {} (at {})",
-            notification.user_id, notification.title, notification.content, notification.timestamp
-        );
-        Ok(())
-    }
-}
 
 /// Email notifier for sending notifications via email
 #[derive(Clone)]
@@ -84,7 +49,10 @@ impl EmailNotifier {
 
 #[async_trait::async_trait]
 impl<T: std::fmt::Display + Clone + Send + Sync + 'static> Notifier<T> for EmailNotifier {
-    async fn send(&self, notification: Notification<T>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn send(
+        &self,
+        notification: Notification<T>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Get the user's email address
         let email = {
             let emails = self.user_emails.read().await;
@@ -103,12 +71,9 @@ impl<T: std::fmt::Display + Clone + Send + Sync + 'static> Notifier<T> for Email
                 ))?;
 
             // Create the SMTP transport
-            let creds = Credentials::new(
-                self.smtp_username.clone(),
-                self.smtp_password.clone(),
-            );
-            
-            let mailer: AsyncSmtpTransport<Tokio1Executor> = 
+            let creds = Credentials::new(self.smtp_username.clone(), self.smtp_password.clone());
+
+            let mailer: AsyncSmtpTransport<Tokio1Executor> =
                 AsyncSmtpTransport::<Tokio1Executor>::relay(&self.smtp_server)?
                     .port(self.smtp_port)
                     .credentials(creds)
@@ -116,7 +81,7 @@ impl<T: std::fmt::Display + Clone + Send + Sync + 'static> Notifier<T> for Email
 
             // Send the email
             mailer.send(email).await?;
-            
+
             tracing::info!("Email notification sent to user {}", notification.user_id);
             Ok(())
         } else {

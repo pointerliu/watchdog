@@ -1,7 +1,7 @@
 //! Composite notifier that can send notifications through multiple channels
 
 use crate::{
-    notifier::{Notifier, Notification},
+    notifiers::{Notifier, Notification},
 };
 use std::collections::HashMap;
 use std::sync::Arc;

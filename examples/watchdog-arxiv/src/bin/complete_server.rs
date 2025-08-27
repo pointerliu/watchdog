@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use watchdog_core::{
-    notifier::{ConsoleNotifier, EmailNotifier},
+    notifiers::{ConsoleNotifier, EmailNotifier},
 };
 use watchdog_service::{api::subscription_scope, service::StorageSubscriptionService, user::{UserEmailService, user_email_scope}, server::{
     SubscriptionServer, AddUserWorkerMsg, AddNotifierMsg

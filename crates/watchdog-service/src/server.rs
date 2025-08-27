@@ -1,13 +1,11 @@
 use actix::prelude::*;
 use std::collections::HashMap;
 use std::time::Duration;
-use watchdog_core::{
-    fetcher::Fetcher,
-    notifier::{Notification, Notifier},
-    composite_notifier::CompositeNotifier,
-    subscription::{Subscription, SubscriptionCriteria, SubscriptionManager},
-};
 use tracing::{error, info};
+use watchdog_core::{
+    fetchers::Fetcher, CompositeNotifier, Notification, Notifier, Subscription,
+    SubscriptionCriteria, SubscriptionManager,
+};
 
 /// Configuration for the subscription server
 #[derive(Debug, Clone)]
@@ -242,16 +240,20 @@ where
 {
     type Result = ResponseActFuture<Self, ()>;
 
-    fn handle(&mut self, msg: AddNotifierMsg<C::Content>, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(
+        &mut self,
+        msg: AddNotifierMsg<C::Content>,
+        _ctx: &mut Self::Context,
+    ) -> Self::Result {
         let notifier = self.notifier.clone();
         let name = msg.name;
         let notifier_box = msg.notifier;
-        
+
         Box::pin(
             async move {
                 notifier.add_notifier(name, notifier_box).await;
             }
-            .into_actor(self)
+            .into_actor(self),
         )
     }
 }
@@ -266,16 +268,15 @@ where
 {
     type Result = ResponseActFuture<Self, Option<Box<dyn Notifier<C::Content> + Send + Sync>>>;
 
-    fn handle(&mut self, msg: RemoveNotifierMsg<C::Content>, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(
+        &mut self,
+        msg: RemoveNotifierMsg<C::Content>,
+        _ctx: &mut Self::Context,
+    ) -> Self::Result {
         let notifier = self.notifier.clone();
         let name = msg.name;
-        
-        Box::pin(
-            async move {
-                notifier.remove_notifier(&name).await
-            }
-            .into_actor(self)
-        )
+
+        Box::pin(async move { notifier.remove_notifier(&name).await }.into_actor(self))
     }
 }
 
@@ -291,13 +292,8 @@ where
 
     fn handle(&mut self, _msg: ListNotifiersMsg, _ctx: &mut Self::Context) -> Self::Result {
         let notifier = self.notifier.clone();
-        
-        Box::pin(
-            async move {
-                notifier.list_notifiers().await
-            }
-            .into_actor(self)
-        )
+
+        Box::pin(async move { notifier.list_notifiers().await }.into_actor(self))
     }
 }
 
@@ -346,7 +342,10 @@ where
                                 timestamp: fetch_result.timestamp,
                             };
 
-                            info!("Sending notification to user {} via all notifiers", subscription.user_id);
+                            info!(
+                                "Sending notification to user {} via all notifiers",
+                                subscription.user_id
+                            );
 
                             if let Err(e) = notifier.send(notification).await {
                                 error!(
@@ -379,7 +378,10 @@ where
     type Result = ();
 
     fn handle(&mut self, _msg: ShutdownMsg, ctx: &mut Self::Context) -> Self::Result {
-        info!("Shutting down subscription worker for user {}", self.user_id);
+        info!(
+            "Shutting down subscription worker for user {}",
+            self.user_id
+        );
         ctx.stop();
     }
 }
@@ -444,11 +446,7 @@ where
             return Err(format!("User worker for {} already exists", msg.user_id));
         }
 
-        let worker = SubscriptionWorker::new(
-            msg.user_id.clone(),
-            self.config.clone(),
-            msg.fetcher,
-        );
+        let worker = SubscriptionWorker::new(msg.user_id.clone(), self.config.clone(), msg.fetcher);
         let addr = worker.start();
         self.user_workers.insert(msg.user_id.clone(), addr.clone());
 

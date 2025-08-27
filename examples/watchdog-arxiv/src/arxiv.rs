@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::info;
 use watchdog_core::{
-    fetcher::{FetchResult, Fetcher},
-    notifier::Notifier,
+    fetchers::{FetchResult, Fetcher},
+    notifiers::Notifier,
     SubscriptionCriteria,
 };
 
@@ -140,7 +140,7 @@ pub struct ArxivNotifier;
 impl Notifier<ArxivPaper> for ArxivNotifier {
     async fn send(
         &self,
-        notification: watchdog_core::notifier::Notification<ArxivPaper>,
+        notification: watchdog_core::notifiers::Notification<ArxivPaper>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         println!(
             "=== New arXiv Paper Alert ===\n\

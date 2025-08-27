@@ -6,7 +6,7 @@ description = "Server implementation using the watchdog framework"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-watchdog = { workspace = true }
+watchdog-core = { workspace = true }
 tokio = { version = "1.0", features = ["full"] }
 actix = "0.13"
 actix-web = "4.0"

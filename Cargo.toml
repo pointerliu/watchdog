@@ -1,8 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-    "watchdog",
-    "watchdog-server",
+    "crates/watchdog-core",
+    "crates/watchdog-server",
     "examples/*",
 ]
 
@@ -11,8 +11,8 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
-watchdog = { path = "watchdog" }
-watchdog-server = { path = "watchdog-server" }
+watchdog-core = { path = "crates/watchdog-core" }
+watchdog-server = { path = "crates/watchdog-server" }
 
 [profile.release]
 lto = true

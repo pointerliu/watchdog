@@ -1,9 +1,9 @@
-//! Example of using the watchdog-server API layer with arXiv subscriptions
+//! Example of using the watchdog-service API layer with arXiv subscriptions
 
 use actix_web::{web, App, HttpServer, middleware::Logger};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use watchdog_server::{
+use watchdog_service::{
     api::subscription_scope,
     service::StorageSubscriptionService,
 };

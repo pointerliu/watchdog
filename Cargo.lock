@@ -2350,7 +2350,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "watchdog-core",
- "watchdog-server",
+ "watchdog-service",
 ]
 
 [[package]]
@@ -2368,7 +2368,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "watchdog-server"
+name = "watchdog-service"
 version = "0.1.0"
 dependencies = [
  "actix",

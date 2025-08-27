@@ -2,7 +2,7 @@
 
 use actix::prelude::*;
 use watchdog_core::subscription::Subscription;
-use watchdog_server::{
+use watchdog_service::{
     server::{SubscriptionServer, AddUserWorkerMsg},
     AddSubscriptionMsg, ServerConfig, ShutdownMsg,
 };

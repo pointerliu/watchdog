@@ -18,7 +18,7 @@ name = "test-email-env"
 path = "src/bin/test_email_env.rs"
 
 [dependencies]
-watchdog-server = { workspace = true }
+watchdog-service = { workspace = true }
 watchdog-core = { workspace = true }
 tokio = { version = "1.0", features = ["full"] }
 actix = "0.13"

@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "crates/watchdog-core",
-    "crates/watchdog-server",
+    "crates/watchdog-service",
     "examples/*",
 ]
 
@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 watchdog-core = { path = "crates/watchdog-core" }
-watchdog-server = { path = "crates/watchdog-server" }
+watchdog-service = { path = "crates/watchdog-service" }
 
 [profile.release]
 lto = true

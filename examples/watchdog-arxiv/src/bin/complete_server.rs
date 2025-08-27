@@ -9,7 +9,7 @@ use tokio::sync::RwLock;
 use watchdog_core::{
     notifier::{ConsoleNotifier, EmailNotifier},
 };
-use watchdog_server::{api::subscription_scope, service::StorageSubscriptionService, user::{UserEmailService, user_email_scope}, server::{
+use watchdog_service::{api::subscription_scope, service::StorageSubscriptionService, user::{UserEmailService, user_email_scope}, server::{
     SubscriptionServer, AddUserWorkerMsg, AddNotifierMsg
 }, ServerConfig};
 // Import arxiv components from the local crate

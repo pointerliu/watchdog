@@ -1,5 +1,5 @@
 [package]
-name = "watchdog-server"
+name = "watchdog-service"
 version = "0.1.0"
 edition = "2021"
 description = "Server implementation using the watchdog framework"

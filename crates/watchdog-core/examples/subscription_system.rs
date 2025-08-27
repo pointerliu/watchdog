@@ -109,7 +109,7 @@ impl<T: Clone + Send + Sync> FetchStorage<T> for FetchedDataStorage<T> {
     }
 }
 
-#[tokio::main]
+#[actix::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Initialize tracing
     tracing_subscriber::fmt::init();

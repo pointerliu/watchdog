@@ -135,7 +135,7 @@ impl<T: Clone + Send + Sync> FetchStorage<T> for FetchedDataStorage<T> {
     }
 }
 
-#[tokio::test]
+#[actix::test]
 async fn test_fetcher_manager() {
     let storage = FetchedDataStorage::<String>::new();
     let fetcher_manager = FetcherManager::new(Duration::from_millis(100), storage);

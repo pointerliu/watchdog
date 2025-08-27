@@ -1,12 +1,6 @@
-use crate::{
-    FetchResult, Fetcher, Manager, Notification, Notifier, SubscriptionCriteria,
-    SubscriptionManager,
-};
-use std::collections::HashMap;
+use crate::{Manager, Notification, Notifier, SubscriptionCriteria, SubscriptionManager};
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::sync::RwLock;
-use tokio::time::interval;
 use tracing::{error, info};
 
 /// Manager for notifiers that sends notifications based on subscriptions

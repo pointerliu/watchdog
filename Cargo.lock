@@ -2357,6 +2357,7 @@ dependencies = [
 name = "watchdog-core"
 version = "0.1.0"
 dependencies = [
+ "actix",
  "async-trait",
  "lettre",
  "serde",

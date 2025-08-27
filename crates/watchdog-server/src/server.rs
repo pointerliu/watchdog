@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use std::collections::HashMap;
 use std::time::Duration;
-use watchdog::{
+use watchdog_core::{
     fetcher::Fetcher,
     notifier::{Notification, Notifier},
     composite_notifier::CompositeNotifier,

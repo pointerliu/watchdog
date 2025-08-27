@@ -1,7 +1,7 @@
 //! Example of using the EmailNotifier with the watchdog framework
 
 use actix::prelude::*;
-use watchdog::subscription::Subscription;
+use watchdog_core::subscription::Subscription;
 use watchdog_server::{
     server::{SubscriptionServer, AddUserWorkerMsg},
     AddSubscriptionMsg, ServerConfig, ShutdownMsg,

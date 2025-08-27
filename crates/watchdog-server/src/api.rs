@@ -10,7 +10,7 @@ use actix_web::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use watchdog::{
+use watchdog_core::{
     subscription::{Subscription, SubscriptionCriteria},
     FrameworkError,
 };

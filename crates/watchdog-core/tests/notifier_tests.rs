@@ -1,4 +1,4 @@
-use watchdog::{ConsoleNotifier, Notification, Notifier};
+use watchdog_core::{ConsoleNotifier, Notification, Notifier};
 
 #[tokio::test]
 async fn test_console_notifier() {

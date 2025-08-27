@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::hash::Hash;
 use tokio::sync::RwLock;
-use watchdog::{
+use watchdog_core::{
     subscription::{Subscription, SubscriptionCriteria},
     FrameworkError,
 };

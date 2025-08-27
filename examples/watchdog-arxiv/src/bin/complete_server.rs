@@ -6,7 +6,7 @@ use actix_web::{web, App, HttpServer, middleware::Logger, HttpResponse, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use watchdog::{
+use watchdog_core::{
     notifier::{ConsoleNotifier, EmailNotifier},
 };
 use watchdog_server::{api::subscription_scope, service::StorageSubscriptionService, user::{UserEmailService, user_email_scope}, server::{

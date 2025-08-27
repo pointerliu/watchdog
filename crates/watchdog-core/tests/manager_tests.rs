@@ -163,7 +163,7 @@ async fn test_fetcher_manager() {
     assert!(data[0].content.contains("test data"));
 }
 
-#[tokio::test]
+#[actix::test]
 async fn test_notifier_manager() {
     // Create a subscription manager
     let subscription_manager = Arc::new(RwLock::new(
@@ -177,8 +177,8 @@ async fn test_notifier_manager() {
     );
 
     {
-        let mut sm = subscription_manager.write().await;
-        sm.add_subscription(subscription);
+        let sm = subscription_manager.read().await;
+        sm.add_subscription(subscription).await;
     }
 
     // Create a test notifier

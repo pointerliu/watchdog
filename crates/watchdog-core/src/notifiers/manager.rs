@@ -4,22 +4,23 @@ use tokio::sync::RwLock;
 use tracing::{error, info};
 
 /// Manager for notifiers that sends notifications based on subscriptions
-pub struct NotifierManager<T: Clone, C: SubscriptionCriteria>
+pub struct NotifierManager<T: Clone, C: SubscriptionCriteria + 'static>
 where
-    C::Content: Clone,
-    C::Id: Send + Sync,
-    C: Send + Sync + Clone,
+    C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,
+    C::Id: Send + Sync + Unpin + 'static,
+    C: Send + Sync + Clone + Unpin + 'static,
+    T: Send + Sync + 'static,
 {
     notifier: Arc<dyn Notifier<T> + Send + Sync>,
     subscription_manager: Arc<RwLock<SubscriptionManager<C>>>,
     running: Arc<RwLock<bool>>,
 }
 
-impl<T: Clone + Send + Sync + 'static, C: SubscriptionCriteria + Clone> NotifierManager<T, C>
+impl<T: Clone + Send + Sync + 'static, C: SubscriptionCriteria + Clone + 'static> NotifierManager<T, C>
 where
-    C::Content: Clone,
-    C::Id: Send + Sync,
-    C: Send + Sync + Clone,
+    C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,
+    C::Id: Send + Sync + Unpin + 'static,
+    C: Send + Sync + Clone + Unpin + 'static,
 {
     pub fn new(
         notifier: Arc<dyn Notifier<T> + Send + Sync>,
@@ -39,16 +40,12 @@ where
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>
     where
         T: Clone + Into<C::Content>,
-        C::Content: std::fmt::Debug,
     {
-        // Get matching subscriptions
+        // Get matching subscriptions using the actor
         let matching_subscriptions = {
             let sm = self.subscription_manager.read().await;
             let content_ref: C::Content = content.clone().into();
-            sm.get_matching_subscriptions(&content_ref)
-                .into_iter()
-                .cloned()
-                .collect::<Vec<_>>()
+            sm.get_matching_subscriptions(content_ref).await
         };
 
         info!(
@@ -91,12 +88,12 @@ where
 }
 
 #[async_trait::async_trait]
-impl<T: Clone + Send + Sync + 'static, C: SubscriptionCriteria + Clone> Manager
+impl<T: Clone + Send + Sync + 'static, C: SubscriptionCriteria + Clone + 'static> Manager
     for NotifierManager<T, C>
 where
-    C::Content: Clone,
-    C::Id: Send + Sync,
-    C: Send + Sync + Clone,
+    C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,
+    C::Id: Send + Sync + Unpin + 'static,
+    C: Send + Sync + Clone + Unpin + 'static,
 {
     fn start(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // For NotifierManager, start doesn't do anything special since it's

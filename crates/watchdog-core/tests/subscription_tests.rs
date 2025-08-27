@@ -27,31 +27,31 @@ impl SubscriptionCriteria for TestCriteria {
     }
 }
 
-#[tokio::test]
+#[actix::test]
 async fn test_subscription_manager() {
-    let mut manager = SubscriptionManager::<TestCriteria>::new();
+    let manager = SubscriptionManager::<TestCriteria>::new();
     
     let subscription = Subscription::new(
         "test_user".to_string(),
         TestCriteria::new("test_id".to_string(), vec!["test".to_string()])
     );
     
-    manager.add_subscription(subscription);
+    manager.add_subscription(subscription).await;
     
-    assert_eq!(manager.get_subscriptions().len(), 1);
+    assert_eq!(manager.get_subscriptions().await.len(), 1);
     
-    let retrieved = manager.get_subscription(&"test_id".to_string());
+    let retrieved = manager.get_subscription("test_id".to_string()).await;
     assert!(retrieved.is_some());
     assert_eq!(retrieved.unwrap().user_id, "test_user");
     
     // Test removal
-    let removed = manager.remove_subscription(&"test_id".to_string());
+    let removed = manager.remove_subscription("test_id".to_string()).await;
     assert!(removed.is_some());
-    assert_eq!(manager.get_subscriptions().len(), 0);
+    assert_eq!(manager.get_subscriptions().await.len(), 0);
 }
 
-#[tokio::test]
-async fn test_criteria_matching() {
+#[test]
+fn test_criteria_matching() {
     let criteria = TestCriteria::new("test_id".to_string(), vec!["rust".to_string(), "programming".to_string()]);
     
     assert!(criteria.matches(&"I love rust programming".to_string()));

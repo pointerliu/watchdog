@@ -168,9 +168,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     );
 
     {
-        let mut sm = subscription_manager.write().await;
-        sm.add_subscription(subscription1);
-        sm.add_subscription(subscription2);
+        let sm = subscription_manager.read().await;
+        sm.add_subscription(subscription1).await;
+        sm.add_subscription(subscription2).await;
     }
 
     // Create a notifier

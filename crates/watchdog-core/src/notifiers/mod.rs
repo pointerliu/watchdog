@@ -2,6 +2,7 @@ pub mod composition;
 mod console;
 mod email;
 mod manager;
+pub mod actor;
 
 pub use console::ConsoleNotifier;
 pub use email::EmailNotifier;

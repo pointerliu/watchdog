@@ -1,5 +1,5 @@
 use crate::storage::FetchStorage;
-use crate::{Fetcher, Manager};
+use crate::Fetcher;
 use actix::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;

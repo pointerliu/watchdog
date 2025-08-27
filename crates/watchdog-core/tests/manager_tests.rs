@@ -138,7 +138,7 @@ impl<T: Clone + Send + Sync> FetchStorage<T> for FetchedDataStorage<T> {
 #[actix::test]
 async fn test_fetcher_manager() {
     let storage = FetchedDataStorage::<String>::new();
-    let fetcher_manager = FetcherManager::new(Duration::from_millis(100), storage);
+    let fetcher_manager = FetcherManager::new(Duration::from_millis(100), storage, 4);
 
     let fetcher = TestFetcher::new(vec!["test data".to_string()]);
 

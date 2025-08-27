@@ -115,8 +115,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     tracing_subscriber::fmt::init();
 
     let storage = FetchedDataStorage::<String>::new();
-    // Create a fetcher manager that runs every 5 seconds
-    let fetcher_manager = FetcherManager::new(Duration::from_secs(5), storage);
+    // Create a fetcher manager that runs every 5 seconds with 4 threads
+    let fetcher_manager = FetcherManager::new(Duration::from_secs(5), storage, 4);
 
     // Create some sample fetchers
     let fetcher1 = SimpleFetcher::new(

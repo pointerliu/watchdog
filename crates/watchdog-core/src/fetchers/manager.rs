@@ -45,15 +45,17 @@ pub struct FetcherActor<T: Clone + Send + Sync + 'static, S: FetchStorage<T> + C
     storage: S,
     interval_duration: Duration,
     running: bool,
+    thread_count: usize,
 }
 
 impl<T: Clone + Send + Sync + 'static, S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static> FetcherActor<T, S> {
-    pub fn new(interval_duration: Duration, storage: S) -> Self {
+    pub fn new(interval_duration: Duration, storage: S, thread_count: usize) -> Self {
         Self {
             fetchers: Arc::new(RwLock::new(HashMap::new())),
             storage,
             interval_duration,
             running: false,
+            thread_count,
         }
     }
 }
@@ -149,50 +151,82 @@ impl<T: Clone + Send + Sync + 'static, S: FetchStorage<T> + Clone + Send + Sync 
         // Clone necessary data for the async task
         let fetchers = self.fetchers.clone();
         let storage = self.storage.clone();
+        let thread_count = self.thread_count;
         
         // Spawn the async fetch cycle
         actix::spawn(async move {
-            run_fetch_cycle(fetchers, storage).await;
+            run_fetch_cycle(fetchers, storage, thread_count).await;
         });
     }
 }
 
 /// Run the fetch cycle once
-async fn run_fetch_cycle<T: Clone + Send + Sync + 'static, S: FetchStorage<T> + Clone + Send + Sync>(
+async fn run_fetch_cycle<T: Clone + Send + Sync + 'static, S: FetchStorage<T> + Clone + Send + Sync + 'static>(
     fetchers: Arc<RwLock<HashMap<String, Box<dyn Fetcher<T> + Send + Sync>>>>,
     storage: S,
+    thread_count: usize,
 ) {
     let fetcher_names: Vec<String> = {
         let fetchers = fetchers.read().await;
         fetchers.keys().cloned().collect()
     };
 
-    info!("Running fetch cycle for {} fetchers", fetcher_names.len());
+    info!("Running fetch cycle for {} fetchers with {} threads", fetcher_names.len(), thread_count);
 
+    // Create a semaphore to limit concurrent fetch operations
+    let semaphore = Arc::new(tokio::sync::Semaphore::new(thread_count));
+    
+    // Create a vector to hold all the fetch tasks
+    let mut fetch_tasks = Vec::new();
+    
+    // Spawn a task for each fetcher
     for name in fetcher_names {
-        let fetch_result = {
-            let fetchers = fetchers.read().await;
-            if let Some(fetcher) = fetchers.get(&name) {
-                match fetcher.fetch().await {
-                    Ok(result) => {
-                        info!("Successfully fetched data from {}", name);
-                        Some(result)
+        let fetchers = fetchers.clone();
+        let storage = storage.clone();
+        let semaphore = semaphore.clone();
+        let name_clone = name.clone();
+        
+        let task = actix::spawn(async move {
+            // Acquire a permit from the semaphore
+            let _permit = semaphore.acquire().await.unwrap();
+            
+            let fetch_result = {
+                let fetchers = fetchers.read().await;
+                if let Some(fetcher) = fetchers.get(&name) {
+                    match fetcher.fetch().await {
+                        Ok(result) => {
+                            info!("Successfully fetched data from {}", name);
+                            Some((name.clone(), result)) // Return name with result
+                        }
+                        Err(e) => {
+                            error!("Failed to fetch from {}: {}", name, e);
+                            None
+                        }
                     }
-                    Err(e) => {
-                        error!("Failed to fetch from {}: {}", name, e);
-                        None
-                    }
+                } else {
+                    None
                 }
-            } else {
-                None
-            }
-        };
+            };
 
-        // Store the result if successful
-        if let Some(result) = fetch_result {
-            storage.store(result).await;
-        }
+            // Store the result if successful and return success status
+            let success = if let Some((_name, result)) = fetch_result {
+                storage.store(result).await;
+                true
+            } else {
+                false
+            };
+            
+            (name_clone, success)
+        });
+        
+        fetch_tasks.push(task);
     }
+    
+    // Wait for all fetch tasks to complete
+    let results = futures::future::join_all(fetch_tasks).await;
+    
+    let successful_fetches = results.iter().filter(|r| r.as_ref().map_or(false, |(_, success)| *success)).count();
+    info!("Fetch cycle completed. {} out of {} fetchers succeeded", successful_fetches, results.len());
 }
 
 /// Manager for fetchers that runs them periodically using Actix actors
@@ -204,8 +238,8 @@ pub struct FetcherManager<T: Clone + Send + Sync + 'static, S: FetchStorage<T> +
 impl<T: Clone + Send + Sync + 'static, S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static> 
     FetcherManager<T, S> 
 {
-    pub fn new(interval_duration: Duration, storage: S) -> Self {
-        let actor = FetcherActor::new(interval_duration, storage.clone());
+    pub fn new(interval_duration: Duration, storage: S, thread_count: usize) -> Self {
+        let actor = FetcherActor::new(interval_duration, storage.clone(), thread_count);
         let actor_address = actor.start();
         
         Self {

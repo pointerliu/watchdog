@@ -106,6 +106,14 @@ where
                 interval_duration
             );
 
+            // Run the fetch cycle
+            let manager = FetcherManager {
+                fetchers: fetchers.clone(),
+                storage: storage.clone(),
+                interval_duration,
+                running: running.clone(),
+            };
+
             loop {
                 // Check if we should still be running
                 {
@@ -116,15 +124,6 @@ where
                 }
 
                 interval.tick().await;
-
-                // Run the fetch cycle
-                let manager = FetcherManager {
-                    fetchers: fetchers.clone(),
-                    storage: storage.clone(),
-                    interval_duration,
-                    running: running.clone(),
-                };
-
                 manager.run_fetch_cycle().await;
             }
 

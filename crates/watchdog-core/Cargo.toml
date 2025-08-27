@@ -5,6 +5,10 @@ edition = "2021"
 description = "Core framework for managing subscriptions"
 license = "MIT OR Apache-2.0"
 
+[[example]]
+name = "subscription_system"
+path = "examples/subscription_system.rs"
+
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }

@@ -1,9 +1,11 @@
 pub mod composition;
 mod console;
 mod email;
+mod manager;
 
 pub use console::ConsoleNotifier;
 pub use email::EmailNotifier;
+pub use manager::NotifierManager;
 
 /// Represents a notification to be sent to a user
 #[derive(Debug, Clone)]

@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 
+mod manager;
+pub use manager::FetcherManager;
+
 /// Result of a fetch operation
 #[derive(Debug, Clone)]
 pub struct FetchResult<T> {

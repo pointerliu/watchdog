@@ -2368,6 +2368,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "watchdog-server"
+version = "0.1.0"
+
+[[package]]
 name = "watchdog-service"
 version = "0.1.0"
 dependencies = [

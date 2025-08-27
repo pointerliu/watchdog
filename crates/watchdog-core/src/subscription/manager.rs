@@ -1,6 +1,11 @@
-use std::collections::HashMap;
+use crate::subscription::actor::{
+    AddSubscription, GetAllSubscriptions, GetMatchingSubscriptions, GetSubscription,
+    RemoveSubscription,
+};
+use crate::subscription::SubscriptionActor;
 use crate::{Subscription, SubscriptionCriteria};
 use actix::prelude::*;
+use std::collections::HashMap;
 
 /// Manages a collection of subscriptions
 #[derive(Debug)]
@@ -10,7 +15,7 @@ where
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
 {
-    actor_address: Addr<crate::subscription::actor::SubscriptionActor<C>>,
+    actor_address: Addr<SubscriptionActor<C>>,
 }
 
 impl<C: SubscriptionCriteria + 'static> SubscriptionManager<C>
@@ -21,18 +26,16 @@ where
 {
     /// Create a new subscription manager
     pub fn new() -> Self {
-        let actor = crate::subscription::actor::SubscriptionActor::<C>::new();
+        let actor = SubscriptionActor::<C>::new();
         let actor_address = actor.start();
-        
-        Self {
-            actor_address,
-        }
+
+        Self { actor_address }
     }
 
     /// Add a subscription to the manager
     pub async fn add_subscription(&self, subscription: Subscription<C>) {
         self.actor_address
-            .send(crate::subscription::actor::AddSubscription { subscription })
+            .send(AddSubscription { subscription })
             .await
             .unwrap_or_else(|e| tracing::error!("Failed to add subscription: {}", e));
     }
@@ -40,7 +43,7 @@ where
     /// Remove a subscription by its criteria ID
     pub async fn remove_subscription(&self, id: C::Id) -> Option<Subscription<C>> {
         self.actor_address
-            .send(crate::subscription::actor::RemoveSubscription { id })
+            .send(RemoveSubscription { id })
             .await
             .unwrap_or_else(|e| {
                 tracing::error!("Failed to remove subscription: {}", e);
@@ -51,7 +54,7 @@ where
     /// Get a subscription by its criteria ID
     pub async fn get_subscription(&self, id: C::Id) -> Option<Subscription<C>> {
         self.actor_address
-            .send(crate::subscription::actor::GetSubscription { id })
+            .send(GetSubscription { id })
             .await
             .unwrap_or_else(|e| {
                 tracing::error!("Failed to get subscription: {}", e);
@@ -62,7 +65,7 @@ where
     /// Get all subscriptions
     pub async fn get_subscriptions(&self) -> HashMap<C::Id, Subscription<C>> {
         self.actor_address
-            .send(crate::subscription::actor::GetAllSubscriptions::<C>::new())
+            .send(GetAllSubscriptions::<C>::new())
             .await
             .unwrap_or_else(|e| {
                 tracing::error!("Failed to get subscriptions: {}", e);
@@ -73,16 +76,16 @@ where
     /// Get all subscriptions that match the given content
     pub async fn get_matching_subscriptions(&self, content: C::Content) -> Vec<Subscription<C>> {
         self.actor_address
-            .send(crate::subscription::actor::GetMatchingSubscriptions { content })
+            .send(GetMatchingSubscriptions { content })
             .await
             .unwrap_or_else(|e| {
                 tracing::error!("Failed to get matching subscriptions: {}", e);
                 Vec::new()
             })
     }
-    
+
     /// Get the actor address for direct access
-    pub fn get_actor_address(&self) -> Addr<crate::subscription::actor::SubscriptionActor<C>> {
+    pub fn get_actor_address(&self) -> Addr<SubscriptionActor<C>> {
         self.actor_address.clone()
     }
 }

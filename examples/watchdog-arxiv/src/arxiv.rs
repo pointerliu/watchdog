@@ -62,7 +62,7 @@ impl Fetcher<ArxivPaper> for ArxivFetcher {
         // Fetch papers from arXiv
         let arxivs = arxiv::fetch_arxivs(arxiv_query)
             .await
-            .map_err(|e| format!("arxiv::fetch_arxivs error: {:?}", e))?;
+            .map_err(|e| format!("arxiv::fetch_arxivs error: {e:?}"))?;
 
         // Convert to our paper format
         let papers: Vec<ArxivPaper> = arxivs
@@ -71,8 +71,7 @@ impl Fetcher<ArxivPaper> for ArxivFetcher {
                 // Extract author names - this might need adjustment based on the actual structure
                 let authors: Vec<String> = arxiv_entry
                     .authors
-                    .iter()
-                    .map(|author| author.clone()) // Assuming authors are already strings
+                    .iter().cloned() // Assuming authors are already strings
                     .collect();
 
                 ArxivPaper {
@@ -133,7 +132,7 @@ impl ArxivFetcher {
     }
 
     fn query_adaptor(query: &str) -> String {
-        let words: Vec<String> = query.split(" ").map(|s| format!("all:{}", s)).collect();
+        let words: Vec<String> = query.split(" ").map(|s| format!("all:{s}")).collect();
         words.join("+AND+")
     }
 }

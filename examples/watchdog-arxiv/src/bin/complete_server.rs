@@ -64,7 +64,7 @@ pub async fn add_user_with_email(
         })
         .await
         .map_err(|e| {
-            actix_web::error::ErrorInternalServerError(format!("Failed to add user worker: {}", e))
+            actix_web::error::ErrorInternalServerError(format!("Failed to add user worker: {e}"))
         })?;
 
     match worker_result {
@@ -96,14 +96,12 @@ pub async fn add_user_with_email(
 
             Ok(HttpResponse::Ok().json(UserResponse {
                 message: format!(
-                    "User {} added successfully with console and email notifiers",
-                    user_id
+                    "User {user_id} added successfully with console and email notifiers"
                 ),
             }))
         }
         Err(e) => Err(actix_web::error::ErrorInternalServerError(format!(
-            "Failed to create user worker: {}",
-            e
+            "Failed to create user worker: {e}"
         ))),
     }
 }

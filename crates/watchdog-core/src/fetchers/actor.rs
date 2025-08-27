@@ -255,7 +255,7 @@ pub(crate) async fn run_fetch_cycle<
 
     let successful_fetches = results
         .iter()
-        .filter(|r| r.as_ref().map_or(false, |(_, success)| *success))
+        .filter(|r| r.as_ref().is_ok_and(|(_, success)| *success))
         .count();
     info!(
         "Fetch cycle completed. {} out of {} fetchers succeeded",

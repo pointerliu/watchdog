@@ -118,8 +118,7 @@ where
             message: "Subscription created successfully".to_string(),
         }))),
         Err(e) => Ok(Json(ApiResponse::error(format!(
-            "Failed to create subscription: {}",
-            e
+            "Failed to create subscription: {e}"
         )))),
     }
 }
@@ -145,8 +144,7 @@ where
             "Subscription not found".to_string(),
         ))),
         Err(e) => Ok(Json(ApiResponse::error(format!(
-            "Failed to remove subscription: {}",
-            e
+            "Failed to remove subscription: {e}"
         )))),
     }
 }
@@ -173,8 +171,7 @@ where
             "Subscription not found".to_string(),
         ))),
         Err(e) => Ok(Json(ApiResponse::error(format!(
-            "Failed to get subscription: {}",
-            e
+            "Failed to get subscription: {e}"
         )))),
     }
 }
@@ -201,8 +198,7 @@ where
             Ok(Json(ApiResponse::success(response)))
         }
         Err(e) => Ok(Json(ApiResponse::error(format!(
-            "Failed to list subscriptions: {}",
-            e
+            "Failed to list subscriptions: {e}"
         )))),
     }
 }

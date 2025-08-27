@@ -88,8 +88,7 @@ pub async fn set_user_email(
             message: "User email set successfully".to_string(),
         }))),
         Err(e) => Ok(Json(crate::api::ApiResponse::error(format!(
-            "Failed to set user email: {}",
-            e
+            "Failed to set user email: {e}"
         )))),
     }
 }
@@ -108,8 +107,7 @@ pub async fn get_user_email(
             "User email not found".to_string(),
         ))),
         Err(e) => Ok(Json(crate::api::ApiResponse::error(format!(
-            "Failed to get user email: {}",
-            e
+            "Failed to get user email: {e}"
         )))),
     }
 }
@@ -128,8 +126,7 @@ pub async fn remove_user_email(
             "User email not found".to_string(),
         ))),
         Err(e) => Ok(Json(crate::api::ApiResponse::error(format!(
-            "Failed to remove user email: {}",
-            e
+            "Failed to remove user email: {e}"
         )))),
     }
 }
@@ -148,8 +145,7 @@ pub async fn list_user_emails(
             Ok(Json(crate::api::ApiResponse::success(response)))
         }
         Err(e) => Ok(Json(crate::api::ApiResponse::error(format!(
-            "Failed to list user emails: {}",
-            e
+            "Failed to list user emails: {e}"
         )))),
     }
 }

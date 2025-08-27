@@ -51,6 +51,17 @@ where
     _phantom: std::marker::PhantomData<C>,
 }
 
+impl<C: SubscriptionCriteria + 'static> Default for GetAllSubscriptions<C>
+where
+    C::Id: Unpin + Send + Sync + 'static,
+    C::Content: Unpin + Send + Sync + 'static,
+    C: Unpin + Send + Sync + 'static,
+ {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<C: SubscriptionCriteria + 'static> GetAllSubscriptions<C>
 where
     C::Id: Unpin + Send + Sync + 'static,

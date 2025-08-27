@@ -12,6 +12,12 @@ pub struct CompositeNotifier<T: Clone> {
     notifiers: Arc<RwLock<HashMap<String, Box<dyn Notifier<T> + Send + Sync>>>>,
 }
 
+impl<T: Clone> Default for CompositeNotifier<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T: Clone> CompositeNotifier<T> {
     pub fn new() -> Self {
         Self {

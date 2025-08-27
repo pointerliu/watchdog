@@ -1,4 +1,4 @@
-//! Implementation of the SubscriptionService trait that works with the new 
+//! Implementation of the SubscriptionService trait that works with the new
 //! SubscriptionServer actor from the watchdog framework.
 
 use std::collections::HashMap;
@@ -37,10 +37,7 @@ where
 {
     type Error = FrameworkError;
 
-    async fn add_subscription(
-        &self,
-        subscription: Subscription<C>,
-    ) -> Result<(), Self::Error> {
+    async fn add_subscription(&self, subscription: Subscription<C>) -> Result<(), Self::Error> {
         let mut storage = self.storage.write().await;
         storage.insert(subscription.criteria.id().clone(), subscription);
         Ok(())
@@ -54,17 +51,12 @@ where
         Ok(storage.remove(id))
     }
 
-    async fn get_subscription(
-        &self,
-        id: &C::Id,
-    ) -> Result<Option<Subscription<C>>, Self::Error> {
+    async fn get_subscription(&self, id: &C::Id) -> Result<Option<Subscription<C>>, Self::Error> {
         let storage = self.storage.read().await;
         Ok(storage.get(id).cloned())
     }
 
-    async fn list_subscriptions(
-        &self,
-    ) -> Result<Vec<Subscription<C>>, Self::Error> {
+    async fn list_subscriptions(&self) -> Result<Vec<Subscription<C>>, Self::Error> {
         let storage = self.storage.read().await;
         Ok(storage.values().cloned().collect())
     }

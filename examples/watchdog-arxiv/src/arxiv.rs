@@ -39,7 +39,13 @@ pub struct ArxivPaper {
 
 impl std::fmt::Display for ArxivPaper {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} - {} by {}", self.title, self.summary, self.authors.join(", "))
+        write!(
+            f,
+            "{} - {} by {}",
+            self.title,
+            self.summary,
+            self.authors.join(", ")
+        )
     }
 }
 
@@ -181,7 +187,9 @@ impl SubscriptionCriteria for ArxivCriteria {
     fn matches(&self, content: &ArxivPaper) -> bool {
         self.keywords.iter().any(|keyword| {
             content
-                .categories.iter().map(|s| s.to_lowercase())
+                .categories
+                .iter()
+                .map(|s| s.to_lowercase())
                 .collect::<Vec<_>>()
                 .contains(&keyword.to_lowercase())
         })

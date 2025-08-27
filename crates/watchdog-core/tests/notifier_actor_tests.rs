@@ -31,9 +31,9 @@ impl SubscriptionCriteria for TestSubscriptionCriteria {
 #[actix::test]
 async fn test_notifier_manager_with_actix() {
     // Create a subscription manager
-    let subscription_manager = Arc::new(RwLock::new(SubscriptionManager::<
-        TestSubscriptionCriteria,
-    >::new()));
+    let subscription_manager = Arc::new(RwLock::new(
+        SubscriptionManager::<TestSubscriptionCriteria>::new(),
+    ));
 
     // Add a subscription
     let subscription = Subscription::new(
@@ -54,8 +54,10 @@ async fn test_notifier_manager_with_actix() {
         NotifierManager::<String, TestSubscriptionCriteria>::new(notifier, subscription_manager);
 
     // Send a notification
-    let result = notifier_manager.send_notifications("This is a test message".to_string()).await;
-    
+    let result = notifier_manager
+        .send_notifications("This is a test message".to_string())
+        .await;
+
     // The result should be Ok
     assert!(result.is_ok());
 }

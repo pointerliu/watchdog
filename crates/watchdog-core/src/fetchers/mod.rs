@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-mod manager;
 mod actor;
-pub use manager::FetcherManager;
+mod manager;
 pub use actor::FetcherActor;
+pub use manager::FetcherManager;
 
 /// Result of a fetch operation
 #[derive(Debug, Clone)]

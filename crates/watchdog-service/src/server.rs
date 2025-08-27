@@ -177,7 +177,7 @@ where
     fn handle(&mut self, msg: AddSubscriptionMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
         let actor_address = self.subscription_manager.get_actor_address();
         let subscription = msg.subscription;
-        
+
         // Send the message to the actor and ignore the result for now
         actor_address.do_send(watchdog_core::subscription::actor::AddSubscription { subscription });
         info!("Added subscription for user {}", self.user_id);
@@ -197,7 +197,7 @@ where
     fn handle(&mut self, msg: RemoveSubscriptionMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
         let actor_address = self.subscription_manager.get_actor_address();
         let id = msg.id;
-        
+
         Box::pin(
             async move {
                 let _result = actor_address
@@ -209,7 +209,7 @@ where
                     });
             }
             .into_actor(self)
-            .map(|_, _, _| ())
+            .map(|_, _, _| ()),
         )
     }
 }
@@ -227,7 +227,7 @@ where
     fn handle(&mut self, msg: GetSubscriptionMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
         let actor_address = self.subscription_manager.get_actor_address();
         let id = msg.id;
-        
+
         Box::pin(
             async move {
                 actor_address
@@ -238,7 +238,7 @@ where
                         None
                     })
             }
-            .into_actor(self)
+            .into_actor(self),
         )
     }
 }
@@ -255,7 +255,7 @@ where
 
     fn handle(&mut self, _msg: ListSubscriptionsMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
         let actor_address = self.subscription_manager.get_actor_address();
-        
+
         Box::pin(
             async move {
                 actor_address
@@ -269,7 +269,7 @@ where
                     .cloned()
                     .collect()
             }
-            .into_actor(self)
+            .into_actor(self),
         )
     }
 }
@@ -370,7 +370,7 @@ where
                     tracing::error!("Failed to get subscriptions: {}", e);
                     std::collections::HashMap::new()
                 });
-            
+
             match fetcher.fetch().await {
                 Ok(fetch_result) => {
                     info!(

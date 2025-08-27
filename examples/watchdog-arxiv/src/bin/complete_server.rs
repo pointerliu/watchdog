@@ -2,18 +2,20 @@
 //! This version supports multiple notifiers per user (email and console)
 
 use actix::prelude::*;
-use actix_web::{web, App, HttpServer, middleware::Logger, HttpResponse, Result};
+use actix_web::{middleware::Logger, web, App, HttpResponse, HttpServer, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use watchdog_core::{
-    notifiers::{ConsoleNotifier, EmailNotifier},
+use watchdog_core::notifiers::{ConsoleNotifier, EmailNotifier};
+use watchdog_service::{
+    api::subscription_scope,
+    server::{AddNotifierMsg, AddUserWorkerMsg, SubscriptionServer},
+    service::StorageSubscriptionService,
+    user::{user_email_scope, UserEmailService},
+    ServerConfig,
 };
-use watchdog_service::{api::subscription_scope, service::StorageSubscriptionService, user::{UserEmailService, user_email_scope}, server::{
-    SubscriptionServer, AddUserWorkerMsg, AddNotifierMsg
-}, ServerConfig};
 // Import arxiv components from the local crate
-use watchdog_arxiv::{ArxivFetcher, ArxivFetcherBuilder, ArxivCriteria, ArxivPaper};
+use watchdog_arxiv::{ArxivCriteria, ArxivFetcher, ArxivFetcherBuilder, ArxivPaper};
 
 /// Request to add a user with email configuration
 #[derive(Deserialize, Serialize, Clone)]
@@ -38,7 +40,7 @@ pub async fn add_user_with_email(
 ) -> Result<HttpResponse> {
     let user_id = req.user_id.clone();
     let email_address = req.email_address.clone();
-    
+
     // Store user email in the user email service
     user_email_service
         .write()
@@ -46,14 +48,14 @@ pub async fn add_user_with_email(
         .set_user_email(user_id.clone(), email_address.clone())
         .await
         .unwrap_or_else(|_| println!("Warning: Could not store user email"));
-    
+
     // Create and start the user worker
     let fetcher = ArxivFetcherBuilder::default()
         .query("machine learning".to_string()) // Default query, can be customized
         .number(5)
         .build()
         .unwrap();
-    
+
     let worker_result = server_addr
         .send(AddUserWorkerMsg {
             user_id: user_id.clone(),
@@ -64,7 +66,7 @@ pub async fn add_user_with_email(
         .map_err(|e| {
             actix_web::error::ErrorInternalServerError(format!("Failed to add user worker: {}", e))
         })?;
-    
+
     match worker_result {
         Ok(worker_addr) => {
             // Add console notifier
@@ -73,30 +75,36 @@ pub async fn add_user_with_email(
                 name: "console".to_string(),
                 notifier: Box::new(console_notifier),
             });
-            
+
             // Add email notifier
             let email_notifier = EmailNotifier::new(
                 "smtp.163.com".to_string(), // Default SMTP server
-                465, // Default port
+                465,                        // Default port
                 req.smtp_username.clone(),
                 req.smtp_password.clone(),
             );
-            
+
             // Set the user's email address in the email notifier
-            email_notifier.set_user_email(user_id.clone(), email_address).await;
-            
+            email_notifier
+                .set_user_email(user_id.clone(), email_address)
+                .await;
+
             worker_addr.do_send(AddNotifierMsg::<ArxivPaper> {
                 name: "email".to_string(),
                 notifier: Box::new(email_notifier),
             });
-            
+
             Ok(HttpResponse::Ok().json(UserResponse {
-                message: format!("User {} added successfully with console and email notifiers", user_id),
+                message: format!(
+                    "User {} added successfully with console and email notifiers",
+                    user_id
+                ),
             }))
         }
-        Err(e) => {
-            Err(actix_web::error::ErrorInternalServerError(format!("Failed to create user worker: {}", e)))
-        }
+        Err(e) => Err(actix_web::error::ErrorInternalServerError(format!(
+            "Failed to create user worker: {}",
+            e
+        ))),
     }
 }
 
@@ -119,18 +127,20 @@ async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     // Create a storage-based subscription service
-    let subscription_service = Arc::new(RwLock::new(StorageSubscriptionService::<ArxivCriteria>::new()));
-    
+    let subscription_service = Arc::new(RwLock::new(
+        StorageSubscriptionService::<ArxivCriteria>::new(),
+    ));
+
     // Create a user email service
     let user_email_service = Arc::new(RwLock::new(UserEmailService::new()));
-    
+
     // Create server config
     let config = ServerConfig::default();
-    
+
     // Create and start the multi-user server
     let server = SubscriptionServer::<ArxivFetcher, ArxivCriteria>::new(config);
     let server_addr = server.start();
-    
+
     println!("Starting complete ArXiv subscription service...");
     println!("API endpoints available at http://localhost:8080");
     println!("Health check: http://localhost:8080/health");
@@ -149,9 +159,12 @@ async fn main() -> std::io::Result<()> {
             .route("/health", web::get().to(health))
             .service(
                 web::scope("/api/v1")
-                    .service(subscription_scope::<ArxivCriteria, StorageSubscriptionService<ArxivCriteria>>())
+                    .service(subscription_scope::<
+                        ArxivCriteria,
+                        StorageSubscriptionService<ArxivCriteria>,
+                    >())
                     .service(user_email_scope())
-                    .route("/add-user", web::post().to(add_user_with_email))
+                    .route("/add-user", web::post().to(add_user_with_email)),
             )
     })
     .bind("127.0.0.1:8080")?

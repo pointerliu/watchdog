@@ -1,10 +1,10 @@
 use std::hash::Hash;
 
-pub mod manager;
 pub mod actor;
+pub mod manager;
 
-pub use manager::SubscriptionManager;
 pub use actor::SubscriptionActor;
+pub use manager::SubscriptionManager;
 
 /// A trait that defines the criteria for a subscription.
 /// Implementors can define their own logic for matching content.

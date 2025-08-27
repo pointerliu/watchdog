@@ -16,7 +16,8 @@ where
     actor_address: Addr<NotifierActor<T, C>>,
 }
 
-impl<T: Clone + Send + Sync + 'static, C: SubscriptionCriteria + Clone + 'static> NotifierManager<T, C>
+impl<T: Clone + Send + Sync + 'static, C: SubscriptionCriteria + Clone + 'static>
+    NotifierManager<T, C>
 where
     T: Clone + Into<C::Content> + Send + Sync + 'static,
     C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,

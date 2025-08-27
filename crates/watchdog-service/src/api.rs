@@ -1,11 +1,11 @@
 //! REST API layer for the watchdog subscription framework
-//! 
+//!
 //! This module provides a flexible and scalable API for managing subscriptions,
 //! allowing developers to easily build subscription-based services.
 
 use actix_web::{
     web::{self, Data, Json, Path},
-    Result as ActixResult, Scope, HttpRequest,
+    HttpRequest, Result as ActixResult, Scope,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -84,31 +84,21 @@ pub struct SubscriptionDetailsResponse<C> {
 }
 
 /// Service trait for subscription management
-/// 
+///
 /// This trait abstracts the subscription management operations, allowing
 /// different implementations for different use cases.
 #[async_trait::async_trait]
 pub trait SubscriptionService<C: SubscriptionCriteria + Clone + Send + Sync> {
     type Error: std::error::Error + Send + Sync;
 
-    async fn add_subscription(
-        &self,
-        subscription: Subscription<C>,
-    ) -> Result<(), Self::Error>;
+    async fn add_subscription(&self, subscription: Subscription<C>) -> Result<(), Self::Error>;
 
-    async fn remove_subscription(
-        &self,
-        id: &C::Id,
-    ) -> Result<Option<Subscription<C>>, Self::Error>;
+    async fn remove_subscription(&self, id: &C::Id)
+        -> Result<Option<Subscription<C>>, Self::Error>;
 
-    async fn get_subscription(
-        &self,
-        id: &C::Id,
-    ) -> Result<Option<Subscription<C>>, Self::Error>;
+    async fn get_subscription(&self, id: &C::Id) -> Result<Option<Subscription<C>>, Self::Error>;
 
-    async fn list_subscriptions(
-        &self,
-    ) -> Result<Vec<Subscription<C>>, Self::Error>;
+    async fn list_subscriptions(&self) -> Result<Vec<Subscription<C>>, Self::Error>;
 }
 
 /// API handler for creating a new subscription
@@ -122,7 +112,7 @@ where
     S: SubscriptionService<C> + Send + Sync + 'static,
 {
     let subscription = Subscription::new(json_req.user_id.clone(), json_req.criteria.clone());
-    
+
     match service.read().await.add_subscription(subscription).await {
         Ok(()) => Ok(Json(ApiResponse::success(SubscriptionResponse {
             message: "Subscription created successfully".to_string(),
@@ -146,12 +136,14 @@ where
     S: SubscriptionService<C> + Send + Sync + 'static,
 {
     let id: C::Id = path.into_inner().into();
-    
+
     match service.read().await.remove_subscription(&id).await {
         Ok(Some(_)) => Ok(Json(ApiResponse::success(SubscriptionResponse {
             message: "Subscription removed successfully".to_string(),
         }))),
-        Ok(None) => Ok(Json(ApiResponse::error("Subscription not found".to_string()))),
+        Ok(None) => Ok(Json(ApiResponse::error(
+            "Subscription not found".to_string(),
+        ))),
         Err(e) => Ok(Json(ApiResponse::error(format!(
             "Failed to remove subscription: {}",
             e
@@ -171,15 +163,15 @@ where
     S: SubscriptionService<C> + Send + Sync + 'static,
 {
     let id: C::Id = path.into_inner().into();
-    
+
     match service.read().await.get_subscription(&id).await {
-        Ok(Some(subscription)) => Ok(Json(ApiResponse::success(
-            SubscriptionDetailsResponse {
-                user_id: subscription.user_id,
-                criteria: subscription.criteria,
-            },
+        Ok(Some(subscription)) => Ok(Json(ApiResponse::success(SubscriptionDetailsResponse {
+            user_id: subscription.user_id,
+            criteria: subscription.criteria,
+        }))),
+        Ok(None) => Ok(Json(ApiResponse::error(
+            "Subscription not found".to_string(),
         ))),
-        Ok(None) => Ok(Json(ApiResponse::error("Subscription not found".to_string()))),
         Err(e) => Ok(Json(ApiResponse::error(format!(
             "Failed to get subscription: {}",
             e
@@ -205,7 +197,7 @@ where
                     criteria: s.criteria,
                 })
                 .collect();
-            
+
             Ok(Json(ApiResponse::success(response)))
         }
         Err(e) => Ok(Json(ApiResponse::error(format!(
@@ -216,7 +208,7 @@ where
 }
 
 /// Create a new API scope for subscription management
-/// 
+///
 /// This function creates an Actix Web scope with all the subscription management endpoints.
 /// It should be mounted on an Actix Web application to expose the API.
 pub fn subscription_scope<C, S>() -> Scope

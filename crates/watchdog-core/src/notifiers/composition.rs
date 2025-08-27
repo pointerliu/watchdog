@@ -1,8 +1,6 @@
 //! Composite notifier that can send notifications through multiple channels
 
-use crate::{
-    notifiers::{Notifier, Notification},
-};
+use crate::notifiers::{Notification, Notifier};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -42,26 +40,29 @@ impl<T: Clone> CompositeNotifier<T> {
 
 #[async_trait::async_trait]
 impl<T: Clone + Send + Sync + 'static> Notifier<T> for CompositeNotifier<T> {
-    async fn send(&self, notification: Notification<T>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn send(
+        &self,
+        notification: Notification<T>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Get the count of notifiers first
         let notifier_count = {
             let notifiers = self.notifiers.read().await;
             notifiers.len()
         };
-        
+
         if notifier_count == 0 {
             info!("No notifiers configured, skipping notification");
             return Ok(());
         }
-        
+
         info!("Sending notification to {} notifiers", notifier_count);
-        
+
         // Send to all notifiers sequentially (simpler approach to avoid borrowing issues)
         let notifier_names: Vec<String> = {
             let notifiers = self.notifiers.read().await;
             notifiers.keys().cloned().collect()
         };
-        
+
         for name in notifier_names {
             // We'll get and send in separate read operations to avoid holding the lock
             let send_result = {
@@ -73,7 +74,7 @@ impl<T: Clone + Send + Sync + 'static> Notifier<T> for CompositeNotifier<T> {
                         Ok(()) => {
                             info!("Successfully sent notification via {}", name);
                             Ok(())
-                        },
+                        }
                         Err(e) => {
                             tracing::error!("Failed to send notification via {}: {}", name, e);
                             Err(e)
@@ -83,13 +84,13 @@ impl<T: Clone + Send + Sync + 'static> Notifier<T> for CompositeNotifier<T> {
                     Ok(()) // Notifier not found, but that's OK
                 }
             };
-            
+
             // Handle any errors from the send operation
             if let Err(e) = send_result {
                 tracing::error!("Error sending via {}: {}", name, e);
             }
         }
-        
+
         Ok(())
     }
 }

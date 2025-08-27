@@ -1,12 +1,12 @@
+use crate::{Subscription, SubscriptionCriteria};
 use actix::prelude::*;
 use std::collections::HashMap;
-use crate::{Subscription, SubscriptionCriteria};
 
 /// Message to add a subscription
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct AddSubscription<C: SubscriptionCriteria + 'static> 
-where 
+pub struct AddSubscription<C: SubscriptionCriteria + 'static>
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -17,8 +17,8 @@ where
 /// Message to remove a subscription
 #[derive(Message)]
 #[rtype(result = "Option<Subscription<C>>")]
-pub struct RemoveSubscription<C: SubscriptionCriteria + 'static> 
-where 
+pub struct RemoveSubscription<C: SubscriptionCriteria + 'static>
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -29,8 +29,8 @@ where
 /// Message to get a subscription
 #[derive(Message)]
 #[rtype(result = "Option<Subscription<C>>")]
-pub struct GetSubscription<C: SubscriptionCriteria + 'static> 
-where 
+pub struct GetSubscription<C: SubscriptionCriteria + 'static>
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -41,8 +41,8 @@ where
 /// Message to get all subscriptions
 #[derive(Message)]
 #[rtype(result = "HashMap<C::Id, Subscription<C>>")]
-pub struct GetAllSubscriptions<C: SubscriptionCriteria + 'static> 
-where 
+pub struct GetAllSubscriptions<C: SubscriptionCriteria + 'static>
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -52,7 +52,7 @@ where
 }
 
 impl<C: SubscriptionCriteria + 'static> GetAllSubscriptions<C>
-where 
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -67,8 +67,8 @@ where
 /// Message to get matching subscriptions
 #[derive(Message)]
 #[rtype(result = "Vec<Subscription<C>>")]
-pub struct GetMatchingSubscriptions<C: SubscriptionCriteria + 'static> 
-where 
+pub struct GetMatchingSubscriptions<C: SubscriptionCriteria + 'static>
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -77,8 +77,8 @@ where
 }
 
 /// Actor implementation for SubscriptionManager
-pub struct SubscriptionActor<C: SubscriptionCriteria + 'static> 
-where 
+pub struct SubscriptionActor<C: SubscriptionCriteria + 'static>
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -87,7 +87,7 @@ where
 }
 
 impl<C: SubscriptionCriteria + 'static> SubscriptionActor<C>
-where 
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -101,7 +101,7 @@ where
 
 // Required implementation for Actix actors
 impl<C: SubscriptionCriteria + 'static> Actor for SubscriptionActor<C>
-where 
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -119,7 +119,7 @@ where
 
 // Handler implementations for messages
 impl<C: SubscriptionCriteria + 'static> Handler<AddSubscription<C>> for SubscriptionActor<C>
-where 
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -127,15 +127,13 @@ where
     type Result = ();
 
     fn handle(&mut self, msg: AddSubscription<C>, _ctx: &mut Self::Context) -> Self::Result {
-        self.subscriptions.insert(
-            msg.subscription.criteria.id().clone(),
-            msg.subscription,
-        );
+        self.subscriptions
+            .insert(msg.subscription.criteria.id().clone(), msg.subscription);
     }
 }
 
 impl<C: SubscriptionCriteria + 'static> Handler<RemoveSubscription<C>> for SubscriptionActor<C>
-where 
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -148,7 +146,7 @@ where
 }
 
 impl<C: SubscriptionCriteria + 'static> Handler<GetSubscription<C>> for SubscriptionActor<C>
-where 
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -161,7 +159,7 @@ where
 }
 
 impl<C: SubscriptionCriteria + 'static> Handler<GetAllSubscriptions<C>> for SubscriptionActor<C>
-where 
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -173,8 +171,9 @@ where
     }
 }
 
-impl<C: SubscriptionCriteria + 'static> Handler<GetMatchingSubscriptions<C>> for SubscriptionActor<C>
-where 
+impl<C: SubscriptionCriteria + 'static> Handler<GetMatchingSubscriptions<C>>
+    for SubscriptionActor<C>
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
@@ -197,7 +196,7 @@ where
 }
 
 impl<C: SubscriptionCriteria + 'static> Default for SubscriptionActor<C>
-where 
+where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,

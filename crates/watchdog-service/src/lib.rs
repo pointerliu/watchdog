@@ -1,29 +1,13 @@
-pub mod server;
 pub mod api;
+pub mod server;
 pub mod service;
 pub mod user;
 
+pub use api::{CreateSubscriptionRequest, SubscriptionService, UpdateSubscriptionRequest};
 pub use server::{
+    AddNotifierMsg, AddSubscriptionMsg, GetSubscriptionMsg, ListNotifiersMsg, ListSubscriptionsMsg,
+    RemoveNotifierMsg, RemoveSubscriptionMsg, ServerConfig, ShutdownMsg, SubscriptionServer,
     SubscriptionWorker,
-    SubscriptionServer,
-    ServerConfig, 
-    AddSubscriptionMsg, 
-    RemoveSubscriptionMsg, 
-    GetSubscriptionMsg,
-    ListSubscriptionsMsg,
-    AddNotifierMsg,
-    RemoveNotifierMsg,
-    ListNotifiersMsg,
-    ShutdownMsg
 };
-pub use api::{
-    CreateSubscriptionRequest,
-    UpdateSubscriptionRequest,
-    SubscriptionService,
-};
-pub use service::{
-    StorageSubscriptionService,
-};
-pub use user::{
-    UserEmailService,
-};
+pub use service::StorageSubscriptionService;
+pub use user::UserEmailService;

@@ -1,5 +1,5 @@
 //! User management module for the watchdog server
-//! 
+//!
 //! This module provides functionality for managing user information,
 //! including email addresses for notifications.
 
@@ -78,7 +78,12 @@ pub async fn set_user_email(
     req: Json<SetUserEmailRequest>,
 ) -> ActixResult<Json<crate::api::ApiResponse<UserEmailResponse>>> {
     let user_id = path.into_inner();
-    match service.read().await.set_user_email(user_id.clone(), req.email.clone()).await {
+    match service
+        .read()
+        .await
+        .set_user_email(user_id.clone(), req.email.clone())
+        .await
+    {
         Ok(()) => Ok(Json(crate::api::ApiResponse::success(UserEmailResponse {
             message: "User email set successfully".to_string(),
         }))),
@@ -97,12 +102,11 @@ pub async fn get_user_email(
     let user_id = path.into_inner();
     match service.read().await.get_user_email(&user_id).await {
         Ok(Some(email)) => Ok(Json(crate::api::ApiResponse::success(
-            UserEmailDetailsResponse {
-                user_id,
-                email,
-            },
+            UserEmailDetailsResponse { user_id, email },
         ))),
-        Ok(None) => Ok(Json(crate::api::ApiResponse::error("User email not found".to_string()))),
+        Ok(None) => Ok(Json(crate::api::ApiResponse::error(
+            "User email not found".to_string(),
+        ))),
         Err(e) => Ok(Json(crate::api::ApiResponse::error(format!(
             "Failed to get user email: {}",
             e
@@ -120,7 +124,9 @@ pub async fn remove_user_email(
         Ok(Some(_)) => Ok(Json(crate::api::ApiResponse::success(UserEmailResponse {
             message: "User email removed successfully".to_string(),
         }))),
-        Ok(None) => Ok(Json(crate::api::ApiResponse::error("User email not found".to_string()))),
+        Ok(None) => Ok(Json(crate::api::ApiResponse::error(
+            "User email not found".to_string(),
+        ))),
         Err(e) => Ok(Json(crate::api::ApiResponse::error(format!(
             "Failed to remove user email: {}",
             e
@@ -138,7 +144,7 @@ pub async fn list_user_emails(
                 .into_iter()
                 .map(|(user_id, email)| UserEmailDetailsResponse { user_id, email })
                 .collect();
-            
+
             Ok(Json(crate::api::ApiResponse::success(response)))
         }
         Err(e) => Ok(Json(crate::api::ApiResponse::error(format!(

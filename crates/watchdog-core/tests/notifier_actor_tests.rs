@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use watchdog_core::notifiers::{ConsoleNotifier, NotifierManager};
-use watchdog_core::{Subscription, SubscriptionCriteria, SubscriptionManager};
+use watchdog_core::{Notification, Subscription, SubscriptionCriteria, SubscriptionManager};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 struct TestSubscriptionCriteria {
@@ -49,14 +49,18 @@ async fn test_notifier_manager_with_actix() {
     // Create a notifier
     let notifier = Arc::new(ConsoleNotifier);
 
+    let notification = Notification::new(
+        "test_user".to_string(),
+        "test_sub".to_string(),
+        "this is a test message".to_string(),
+    );
+
     // Create a notifier manager
     let notifier_manager =
         NotifierManager::<String, TestSubscriptionCriteria>::new(notifier, subscription_manager);
 
     // Send a notification
-    let result = notifier_manager
-        .send_notifications("This is a test message".to_string())
-        .await;
+    let result = notifier_manager.send_notification(notification).await;
 
     // The result should be Ok
     assert!(result.is_ok());

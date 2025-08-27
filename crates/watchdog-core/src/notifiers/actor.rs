@@ -7,11 +7,11 @@ use tracing::{error, info};
 /// Message to send notifications
 #[derive(Message)]
 #[rtype(result = "Result<(), Box<dyn std::error::Error + Send + Sync>>")]
-pub struct SendNotifications<T: Clone + Send + Sync + 'static>
+pub struct SendNotification<T: Clone + Send + Sync + 'static>
 where
     T: Send + Sync + 'static,
 {
-    pub content: T,
+    pub notification: Notification<T>,
 }
 
 /// Actor implementation for NotifierManager
@@ -64,7 +64,7 @@ where
 }
 
 // Handler implementations for messages
-impl<T: Clone, C: crate::SubscriptionCriteria + 'static> Handler<SendNotifications<T>>
+impl<T: Clone, C: crate::SubscriptionCriteria + 'static> Handler<SendNotification<T>>
     for NotifierActor<T, C>
 where
     T: Clone + Into<C::Content> + Send + Sync + 'static,
@@ -74,10 +74,10 @@ where
 {
     type Result = ResponseFuture<Result<(), Box<dyn std::error::Error + Send + Sync>>>;
 
-    fn handle(&mut self, msg: SendNotifications<T>, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: SendNotification<T>, _ctx: &mut Self::Context) -> Self::Result {
         let notifier = self.notifier.clone();
         let subscription_manager = self.subscription_manager.clone();
-        let content = msg.content;
+        let content = msg.notification.content;
 
         Box::pin(async move {
             // Get matching subscriptions using the actor

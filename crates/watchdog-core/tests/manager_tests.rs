@@ -191,9 +191,15 @@ async fn test_notifier_manager() {
     );
     notifier_manager.start().unwrap();
 
+    let notification = Notification::new(
+        "test_user".to_string(),
+        "test_sub".to_string(),
+        "this is a test message".to_string(),
+    );
+
     // Send a notification
     notifier_manager
-        .send_notifications("this is a test message".to_string())
+        .send_notification(notification)
         .await
         .unwrap();
 

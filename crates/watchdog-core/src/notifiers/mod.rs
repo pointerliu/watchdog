@@ -17,6 +17,23 @@ pub struct Notification<T: Clone> {
     pub timestamp: u64,
 }
 
+impl<T> Notification<T>
+where
+    T: Clone,
+{
+    pub fn new(user_id: String, title: String, content: T) -> Self {
+        Self {
+            user_id,
+            title,
+            content,
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+        }
+    }
+}
+
 /// A trait for sending notifications
 #[async_trait::async_trait]
 pub trait Notifier<T: Clone>: Send + Sync

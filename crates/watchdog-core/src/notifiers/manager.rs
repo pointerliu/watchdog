@@ -1,5 +1,5 @@
-use crate::notifiers::actor::{NotifierActor, SendNotifications};
-use crate::{Manager, Notifier, SubscriptionCriteria, SubscriptionManager};
+use crate::notifiers::actor::{NotifierActor, SendNotification};
+use crate::{Manager, Notification, Notifier, SubscriptionCriteria, SubscriptionManager};
 use actix::prelude::*;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -35,15 +35,15 @@ where
     }
 
     /// Send notifications for the given content to all matching subscribers
-    pub async fn send_notifications(
+    pub async fn send_notification(
         &self,
-        content: T,
+        notification: Notification<T>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>
     where
         T: Clone + Into<C::Content>,
     {
         self.actor_address
-            .send(SendNotifications { content })
+            .send(SendNotification { notification })
             .await
             .unwrap_or_else(|e| {
                 error!("Failed to send notifications: {}", e);

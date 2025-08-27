@@ -56,7 +56,7 @@ pub struct ShutdownMsg;
 /// Message to trigger content checking
 #[derive(Message)]
 #[rtype(result = "()")]
-struct CheckContentMsg;
+pub struct CheckContentMsg;
 
 /// Message to add a user worker
 #[derive(Message)]
@@ -64,7 +64,7 @@ struct CheckContentMsg;
 pub struct AddUserWorkerMsg<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -79,7 +79,7 @@ where
 pub struct GetUserWorkerMsg<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -112,7 +112,7 @@ pub struct ListNotifiersMsg;
 pub struct SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -126,7 +126,7 @@ where
 impl<F, C> SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -144,7 +144,7 @@ where
 impl<F, C> Actor for SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -168,14 +168,18 @@ where
 impl<F, C> Handler<AddSubscriptionMsg<C>> for SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
     type Result = ();
 
     fn handle(&mut self, msg: AddSubscriptionMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
-        self.subscription_manager.add_subscription(msg.subscription);
+        let actor_address = self.subscription_manager.get_actor_address();
+        let subscription = msg.subscription;
+        
+        // Send the message to the actor and ignore the result for now
+        actor_address.do_send(watchdog_core::subscription::actor::AddSubscription { subscription });
         info!("Added subscription for user {}", self.user_id);
     }
 }
@@ -184,15 +188,29 @@ where
 impl<F, C> Handler<RemoveSubscriptionMsg<C>> for SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
-    type Result = ();
+    type Result = ResponseActFuture<Self, ()>;
 
     fn handle(&mut self, msg: RemoveSubscriptionMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
-        self.subscription_manager.remove_subscription(&msg.id);
-        info!("Removed subscription for user {}", self.user_id);
+        let actor_address = self.subscription_manager.get_actor_address();
+        let id = msg.id;
+        
+        Box::pin(
+            async move {
+                let _result = actor_address
+                    .send(watchdog_core::subscription::actor::RemoveSubscription { id })
+                    .await
+                    .unwrap_or_else(|e| {
+                        tracing::error!("Failed to remove subscription: {}", e);
+                        None
+                    });
+            }
+            .into_actor(self)
+            .map(|_, _, _| ())
+        )
     }
 }
 
@@ -200,14 +218,28 @@ where
 impl<F, C> Handler<GetSubscriptionMsg<C>> for SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
-    type Result = Option<Subscription<C>>;
+    type Result = ResponseActFuture<Self, Option<Subscription<C>>>;
 
     fn handle(&mut self, msg: GetSubscriptionMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
-        self.subscription_manager.get_subscription(&msg.id).cloned()
+        let actor_address = self.subscription_manager.get_actor_address();
+        let id = msg.id;
+        
+        Box::pin(
+            async move {
+                actor_address
+                    .send(watchdog_core::subscription::actor::GetSubscription { id })
+                    .await
+                    .unwrap_or_else(|e| {
+                        tracing::error!("Failed to get subscription: {}", e);
+                        None
+                    })
+            }
+            .into_actor(self)
+        )
     }
 }
 
@@ -215,18 +247,30 @@ where
 impl<F, C> Handler<ListSubscriptionsMsg<C>> for SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
-    type Result = Vec<Subscription<C>>;
+    type Result = ResponseActFuture<Self, Vec<Subscription<C>>>;
 
     fn handle(&mut self, _msg: ListSubscriptionsMsg<C>, _ctx: &mut Self::Context) -> Self::Result {
-        self.subscription_manager
-            .get_subscriptions()
-            .values()
-            .cloned()
-            .collect()
+        let actor_address = self.subscription_manager.get_actor_address();
+        
+        Box::pin(
+            async move {
+                actor_address
+                    .send(watchdog_core::subscription::actor::GetAllSubscriptions::<C>::new())
+                    .await
+                    .unwrap_or_else(|e| {
+                        tracing::error!("Failed to get subscriptions: {}", e);
+                        std::collections::HashMap::new()
+                    })
+                    .values()
+                    .cloned()
+                    .collect()
+            }
+            .into_actor(self)
+        )
     }
 }
 
@@ -234,7 +278,7 @@ where
 impl<F, C> Handler<AddNotifierMsg<C::Content>> for SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -262,7 +306,7 @@ where
 impl<F, C> Handler<RemoveNotifierMsg<C::Content>> for SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -284,7 +328,7 @@ where
 impl<F, C> Handler<ListNotifiersMsg> for SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -301,7 +345,7 @@ where
 impl<F, C> Handler<CheckContentMsg> for SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -313,11 +357,20 @@ where
         // Clone the fetcher and notifier to move into the async block
         let fetcher = self.fetcher.clone();
         let notifier = self.notifier.clone();
-        let subscriptions = self.subscription_manager.get_subscriptions().clone();
+        let actor_address = self.subscription_manager.get_actor_address();
         let user_id = self.user_id.clone();
 
         // Create an async future to fetch content and process it
         let fut = async move {
+            // Get subscriptions inside the async block
+            let subscriptions = actor_address
+                .send(watchdog_core::subscription::actor::GetAllSubscriptions::<C>::new())
+                .await
+                .unwrap_or_else(|e| {
+                    tracing::error!("Failed to get subscriptions: {}", e);
+                    std::collections::HashMap::new()
+                });
+            
             match fetcher.fetch().await {
                 Ok(fetch_result) => {
                     info!(
@@ -371,7 +424,7 @@ where
 impl<F, C> Handler<ShutdownMsg> for SubscriptionWorker<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -390,7 +443,7 @@ where
 pub struct SubscriptionServer<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -401,7 +454,7 @@ where
 impl<F, C> SubscriptionServer<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -416,7 +469,7 @@ where
 impl<F, C> Actor for SubscriptionServer<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -435,7 +488,7 @@ where
 impl<F, C> Handler<AddUserWorkerMsg<F, C>> for SubscriptionServer<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -459,7 +512,7 @@ where
 impl<F, C> Handler<GetUserWorkerMsg<F, C>> for SubscriptionServer<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {
@@ -474,7 +527,7 @@ where
 impl<F, C> Handler<ShutdownMsg> for SubscriptionServer<F, C>
 where
     F: Fetcher<C::Content> + Clone + Unpin + 'static,
-    C: SubscriptionCriteria + Clone + Unpin + 'static,
+    C: SubscriptionCriteria + Clone + Unpin + 'static + Send + Sync,
     C::Id: Clone + Eq + std::hash::Hash + Unpin + Send + Sync + 'static,
     C::Content: Clone + Unpin + Send + Sync + 'static,
 {

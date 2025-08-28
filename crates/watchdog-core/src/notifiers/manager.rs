@@ -1,5 +1,5 @@
-use crate::notifiers::actor::{NotifierActor, SendContent};
-use crate::{Manager, Notification, Notifier, SubscriptionCriteria, SubscriptionManager};
+use crate::notifiers::actor::{AddNotifier, NotifierActor, RemoveNotifier, SendContent};
+use crate::{Manager, Notifier, SubscriptionCriteria, SubscriptionManager};
 use actix::prelude::*;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -45,6 +45,30 @@ where
             .unwrap_or_else(|e| {
                 error!("Failed to send notifications: {}", e);
                 Err(Box::new(e))
+            })
+    }
+
+    /// Add a notifier for a specific user
+    pub async fn add_notifier(
+        &self,
+        user_id: String,
+        notifier: Arc<dyn Notifier<T> + Send + Sync>,
+    ) {
+        self.actor_address
+            .send(AddNotifier { user_id, notifier })
+            .await
+            .unwrap_or_else(|e| {
+                error!("Failed to add notifier: {}", e);
+            })
+    }
+
+    /// Remove all notifiers for a specific user
+    pub async fn remove_notifier(&self, user_id: String) {
+        self.actor_address
+            .send(RemoveNotifier { user_id })
+            .await
+            .unwrap_or_else(|e| {
+                error!("Failed to remove notifier: {}", e);
             })
     }
 }

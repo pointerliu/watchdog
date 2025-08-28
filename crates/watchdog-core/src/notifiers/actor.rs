@@ -12,6 +12,21 @@ pub struct SendContent<T: Clone + Send + Sync + 'static> {
     pub content: T,
 }
 
+/// Message to add a notifier for a user
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct AddNotifier<T: Clone + Send + Sync + 'static> {
+    pub user_id: String,
+    pub notifier: Arc<dyn Notifier<T> + Send + Sync>,
+}
+
+/// Message to remove notifiers for a user
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct RemoveNotifier {
+    pub user_id: String,
+}
+
 /// Actor implementation for NotifierManager
 pub struct NotifierActor<T: Clone, C: crate::SubscriptionCriteria + 'static>
 where
@@ -123,5 +138,47 @@ where
 
             Ok(())
         })
+    }
+}
+
+impl<T: Clone, C: crate::SubscriptionCriteria + 'static> Handler<AddNotifier<T>>
+    for NotifierActor<T, C>
+where
+    T: Clone + Send + Sync + 'static,
+    C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,
+    C::Id: Send + Sync + Unpin + 'static,
+    C: Send + Sync + Clone + Unpin + 'static,
+{
+    type Result = ();
+
+    fn handle(&mut self, msg: AddNotifier<T>, _ctx: &mut Self::Context) -> Self::Result {
+        let user_id = msg.user_id;
+        let notifier = msg.notifier;
+
+        self.user_notifiers
+            .entry(user_id.clone())
+            .or_insert_with(Vec::new)
+            .push(notifier);
+
+        info!("Added notifier for user {}", user_id);
+    }
+}
+
+impl<T: Clone, C: crate::SubscriptionCriteria + 'static> Handler<RemoveNotifier>
+    for NotifierActor<T, C>
+where
+    T: Clone + Send + Sync + 'static,
+    C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,
+    C::Id: Send + Sync + Unpin + 'static,
+    C: Send + Sync + Clone + Unpin + 'static,
+{
+    type Result = ();
+
+    fn handle(&mut self, msg: RemoveNotifier, _ctx: &mut Self::Context) -> Self::Result {
+        let user_id = msg.user_id;
+        
+        self.user_notifiers.remove(&user_id);
+        
+        info!("Removed notifiers for user {}", user_id);
     }
 }

@@ -1,9 +1,10 @@
-use crate::fetchers::actor::{AddFetcher, RemoveFetcher, StartFetchCycle, StopFetchCycle};
+use crate::fetchers::actor::{AddFetcher, RemoveFetcher, SetSender, StartFetchCycle, StopFetchCycle};
 use crate::fetchers::FetcherActor;
 use crate::storage::FetchStorage;
-use crate::{Fetcher, Manager};
+use crate::{FetchResult, Fetcher, Manager};
 use actix::prelude::*;
 use std::time::Duration;
+use tokio::sync::mpsc;
 use tracing::error;
 
 /// Manager for fetchers that runs them periodically using Actix actors
@@ -13,6 +14,7 @@ pub struct FetcherManager<
 > {
     actor_address: Addr<FetcherActor<T, S>>,
     storage: S,
+    sender: Option<mpsc::UnboundedSender<FetchResult<T>>>,
 }
 
 impl<
@@ -27,6 +29,7 @@ impl<
         Self {
             actor_address,
             storage,
+            sender: None,
         }
     }
 
@@ -57,6 +60,18 @@ impl<
     /// Get the storage for fetched data
     pub fn get_storage(&self) -> &S {
         &self.storage
+    }
+
+    /// Set the sender for the fetcher manager to send data to notifiers
+    pub fn set_sender(&mut self, sender: mpsc::UnboundedSender<FetchResult<T>>) {
+        self.sender = Some(sender.clone());
+        // Send the sender to the actor
+        let addr = self.actor_address.clone();
+        actix::spawn(async move {
+            addr.send(SetSender { sender }).await.unwrap_or_else(|e| {
+                error!("Failed to set sender in fetcher actor: {}", e);
+            });
+        });
     }
 }
 

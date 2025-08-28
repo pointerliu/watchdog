@@ -1,10 +1,10 @@
 use crate::storage::FetchStorage;
-use crate::Fetcher;
+use crate::{FetchResult, Fetcher};
 use actix::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::RwLock;
+use tokio::sync::{mpsc, RwLock};
 use tracing::{error, info};
 
 /// Messages for the FetcherManager actor
@@ -39,6 +39,13 @@ pub struct StopFetchCycle;
 #[rtype(result = "()")]
 struct RunFetchCycle;
 
+/// Message to set the sender for sending fetched data to notifiers
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct SetSender<T: Clone + Send + Sync + 'static> {
+    pub sender: mpsc::UnboundedSender<FetchResult<T>>,
+}
+
 /// Actor implementation for FetcherManager
 pub struct FetcherActor<T, S> {
     fetchers: Arc<RwLock<HashMap<String, Box<dyn Fetcher<T> + Send + Sync>>>>,
@@ -46,6 +53,7 @@ pub struct FetcherActor<T, S> {
     interval_duration: Duration,
     running: bool,
     thread_count: usize,
+    sender: Option<mpsc::UnboundedSender<FetchResult<T>>>,
 }
 
 impl<T, S> FetcherActor<T, S>
@@ -60,6 +68,7 @@ where
             interval_duration,
             running: false,
             thread_count,
+            sender: None,
         }
     }
 }
@@ -153,6 +162,18 @@ where
     }
 }
 
+impl<T, S> Handler<SetSender<T>> for FetcherActor<T, S>
+where
+    T: Clone + Send + Sync + 'static,
+    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
+{
+    type Result = ();
+
+    fn handle(&mut self, msg: SetSender<T>, _ctx: &mut Self::Context) -> Self::Result {
+        self.sender = Some(msg.sender);
+    }
+}
+
 impl<T, S> Handler<RunFetchCycle> for FetcherActor<T, S>
 where
     T: Clone + Send + Sync + 'static,
@@ -170,10 +191,11 @@ where
         let fetchers = self.fetchers.clone();
         let storage = self.storage.clone();
         let thread_count = self.thread_count;
+        let sender = self.sender.clone();
 
         // Spawn the async fetch cycle
         actix::spawn(async move {
-            run_fetch_cycle(fetchers, storage, thread_count).await;
+            run_fetch_cycle(fetchers, storage, thread_count, sender).await;
         });
     }
 }
@@ -183,6 +205,7 @@ pub(crate) async fn run_fetch_cycle<T, S>(
     fetchers: Arc<RwLock<HashMap<String, Box<dyn Fetcher<T> + Send + Sync>>>>,
     storage: S,
     thread_count: usize,
+    sender: Option<mpsc::UnboundedSender<FetchResult<T>>>,
 ) where
     T: Clone + Send + Sync + 'static,
     S: FetchStorage<T> + Clone + Send + Sync + 'static,
@@ -209,6 +232,7 @@ pub(crate) async fn run_fetch_cycle<T, S>(
         let fetchers = fetchers.clone();
         let storage = storage.clone();
         let semaphore = semaphore.clone();
+        let sender = sender.clone();
         let name_clone = name.clone();
 
         let task = actix::spawn(async move {
@@ -235,7 +259,15 @@ pub(crate) async fn run_fetch_cycle<T, S>(
 
             // Store the result if successful and return success status
             let success = if let Some((_name, result)) = fetch_result {
-                storage.store(result).await;
+                storage.store(result.clone()).await;
+                
+                // Send the result to notifiers if sender is available
+                if let Some(sender) = &sender {
+                    if let Err(e) = sender.send(result) {
+                        error!("Failed to send fetched data to notifiers: {}", e);
+                    }
+                }
+                
                 true
             } else {
                 false

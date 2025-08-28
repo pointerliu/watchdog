@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::RwLock;
+use tokio::sync::{mpsc, RwLock};
 use watchdog_core::fetchers::FetcherManager;
 use watchdog_core::notifiers::NotifierManager;
 use watchdog_core::storage::FetchStorage;
@@ -114,9 +114,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Initialize tracing
     tracing_subscriber::fmt::init();
 
+    // Create a channel for communication between fetchers and notifiers
+    let (sender, receiver) = mpsc::unbounded_channel::<FetchResult<String>>();
+
     let storage = FetchedDataStorage::<String>::new();
     // Create a fetcher manager that runs every 5 seconds with 4 threads
-    let fetcher_manager = FetcherManager::new(Duration::from_secs(5), storage, 4);
+    let mut fetcher_manager = FetcherManager::new(Duration::from_secs(5), storage, 4);
+    fetcher_manager.set_sender(sender);
 
     // Create some sample fetchers
     let fetcher1 = SimpleFetcher::new(
@@ -142,11 +146,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     fetcher_manager
         .add_fetcher("news2".to_string(), Box::new(fetcher2))
         .await;
-
-    // Start the fetcher manager
-    fetcher_manager
-        .start()
-        .map_err(|e| e as Box<dyn std::error::Error + Send + Sync>)?;
 
     // Create a subscription manager
     let subscription_manager = Arc::new(RwLock::new(SubscriptionManager::<
@@ -177,15 +176,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let notifier = Arc::new(ConsoleNotifier::new("console".to_string()));
 
     // Create a notifier manager
-    let notifier_manager =
+    let mut notifier_manager =
         NotifierManager::<String, SimpleSubscriptionCriteria>::new(subscription_manager);
+    notifier_manager.set_receiver(receiver);
+
+    // Add the notifier for users
+    notifier_manager
+        .add_notifier("user1".to_string(), notifier.clone())
+        .await;
+    notifier_manager
+        .add_notifier("user2".to_string(), notifier)
+        .await;
+
+    // Start the managers
+    fetcher_manager
+        .start()
+        .map_err(|e| e as Box<dyn std::error::Error + Send + Sync>)?;
+
     notifier_manager
         .start()
         .map_err(|e| e as Box<dyn std::error::Error + Send + Sync>)?;
-    
-    // Add the notifier for users
-    notifier_manager.add_notifier("user1".to_string(), notifier.clone()).await;
-    notifier_manager.add_notifier("user2".to_string(), notifier).await;
 
     // In a real system, you would have a mechanism to trigger notifications
     // when new data is fetched. For this example, we'll just run for a while.

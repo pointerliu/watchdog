@@ -1,8 +1,8 @@
-use crate::{Notification, Notifier, SubscriptionManager};
+use crate::{FetchResult, Notification, Notifier, SubscriptionManager};
 use actix::prelude::*;
 use dashmap::DashMap;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::{mpsc, RwLock};
 use tracing::{error, info};
 
 /// Message to send notifications
@@ -35,6 +35,23 @@ pub struct RemoveAllNotifiers {
     pub user_id: String,
 }
 
+/// Message to set the sender for sending fetched data to notifiers
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct SetReceiver<T: Clone + Send + Sync + 'static> {
+    pub receiver: mpsc::UnboundedReceiver<FetchResult<T>>,
+}
+
+/// Message to start the notifier cycle
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct StartNotifierCycle;
+
+/// Message to stop the notifier cycle
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct StopNotifierCycle;
+
 /// Actor implementation for NotifierManager
 pub struct NotifierActor<T: Clone, C: crate::SubscriptionCriteria + 'static>
 where
@@ -46,6 +63,8 @@ where
     // <user_id, notifier>
     user_notifiers: DashMap<String, Vec<Arc<dyn Notifier<T> + Send + Sync>>>,
     subscription_manager: Arc<RwLock<SubscriptionManager<C>>>,
+    receiver: Option<mpsc::UnboundedReceiver<FetchResult<T>>>,
+    running: bool,
 }
 
 impl<T: Clone, C: crate::SubscriptionCriteria + 'static> NotifierActor<T, C>
@@ -59,6 +78,8 @@ where
         Self {
             user_notifiers: DashMap::new(),
             subscription_manager,
+            receiver: None,
+            running: false,
         }
     }
 }
@@ -185,18 +206,86 @@ where
     fn handle(&mut self, msg: RemoveNotifier, _ctx: &mut Self::Context) -> Self::Result {
         let user_id = msg.user_id;
         let notifier_name = msg.notifier_name;
-        
+
         if let Some(mut notifiers) = self.user_notifiers.get_mut(&user_id) {
             // Remove specific notifier by name
             notifiers.retain(|notifier| notifier.name() != notifier_name);
-            
+
             // If no notifiers left for this user, remove the entry entirely
             if notifiers.is_empty() {
                 self.user_notifiers.remove(&user_id);
             }
         }
-        
+
         info!("Removed notifier '{}' for user {}", notifier_name, user_id);
+    }
+}
+
+impl<T: Clone, C: crate::SubscriptionCriteria + 'static> Handler<SetReceiver<T>>
+    for NotifierActor<T, C>
+where
+    T: Clone + Send + Sync + 'static,
+    C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,
+    C::Id: Send + Sync + Unpin + 'static,
+    C: Send + Sync + Clone + Unpin + 'static,
+{
+    type Result = ();
+
+    fn handle(&mut self, msg: SetReceiver<T>, _ctx: &mut Self::Context) -> Self::Result {
+        self.receiver = Some(msg.receiver);
+    }
+}
+
+impl<T, C: crate::SubscriptionCriteria + 'static> Handler<StartNotifierCycle>
+    for NotifierActor<T, C>
+where
+    T: Clone + Into<C::Content> + Send + Sync + 'static,
+    C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,
+    C::Id: Send + Sync + Unpin + 'static,
+    C: Send + Sync + Clone + Unpin + 'static,
+{
+    type Result = ();
+
+    fn handle(&mut self, _msg: StartNotifierCycle, ctx: &mut Self::Context) -> Self::Result {
+        self.running = true;
+
+        // For NotifierManager, start a background task to listen for fetched data
+        if let Some(receiver) = self.receiver.take() {
+            let addr = ctx.address();
+            actix::spawn(async move {
+                info!("NotifierManager background task started");
+                let mut receiver = receiver;
+                while let Some(fetch_result) = receiver.recv().await {
+                    // Convert the fetched content to the appropriate type and send it
+                    if let Err(e) = addr
+                        .send(SendContent {
+                            content: fetch_result.content,
+                        })
+                        .await
+                    {
+                        error!("Failed to send content to notifiers: {}", e);
+                    }
+                }
+                info!("NotifierManager background task stopped");
+            });
+        }
+    }
+}
+
+impl<T, C: crate::SubscriptionCriteria + 'static> Handler<StopNotifierCycle> for NotifierActor<T, C>
+where
+    T: Clone + Send + Sync + 'static,
+    C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,
+    C::Id: Send + Sync + Unpin + 'static,
+    C: Send + Sync + Clone + Unpin + 'static,
+{
+    type Result = ();
+
+    fn handle(&mut self, _msg: StopNotifierCycle, _ctx: &mut Self::Context) -> Self::Result {
+        self.running = false;
+        if let Some(mut receiver) = self.receiver.take() {
+            receiver.close();
+        }
     }
 }
 
@@ -212,9 +301,9 @@ where
 
     fn handle(&mut self, msg: RemoveAllNotifiers, _ctx: &mut Self::Context) -> Self::Result {
         let user_id = msg.user_id;
-        
+
         self.user_notifiers.remove(&user_id);
-        
+
         info!("Removed all notifiers for user {}", user_id);
     }
 }

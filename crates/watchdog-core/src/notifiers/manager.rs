@@ -1,8 +1,11 @@
-use crate::notifiers::actor::{AddNotifier, NotifierActor, RemoveAllNotifiers, RemoveNotifier, SendContent};
-use crate::{Manager, Notifier, SubscriptionCriteria, SubscriptionManager};
+use crate::notifiers::actor::{
+    AddNotifier, NotifierActor, RemoveAllNotifiers, RemoveNotifier, SendContent,
+    StartNotifierCycle, StopNotifierCycle,
+};
+use crate::{FetchResult, Manager, Notifier, SubscriptionCriteria, SubscriptionManager};
 use actix::prelude::*;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::{mpsc, RwLock};
 use tracing::{error, info};
 
 /// Manager for notifiers that sends notifications based on subscriptions
@@ -65,7 +68,10 @@ where
     /// Remove a specific notifier for a user by name
     pub async fn remove_notifier(&self, user_id: String, notifier_name: String) {
         self.actor_address
-            .send(RemoveNotifier { user_id, notifier_name })
+            .send(RemoveNotifier {
+                user_id,
+                notifier_name,
+            })
             .await
             .unwrap_or_else(|e| {
                 error!("Failed to remove notifier: {}", e);
@@ -81,6 +87,19 @@ where
                 error!("Failed to remove all notifiers: {}", e);
             })
     }
+
+    /// Set the receiver for the notifier manager to receive data from fetchers
+    pub fn set_receiver(&mut self, receiver: mpsc::UnboundedReceiver<FetchResult<T>>) {
+        // Send the receiver to the actor
+        let addr = self.actor_address.clone();
+        actix::spawn(async move {
+            addr.send(crate::notifiers::actor::SetReceiver { receiver })
+                .await
+                .unwrap_or_else(|e| {
+                    error!("Failed to set receiver in notifier actor: {}", e);
+                });
+        });
+    }
 }
 
 #[async_trait::async_trait]
@@ -93,14 +112,26 @@ where
     C: Send + Sync + Clone + Unpin + 'static,
 {
     fn start(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        // For NotifierManager, start doesn't do anything special since it's
-        // triggered by external events (new fetched data)
         info!("NotifierManager started");
+        // Send start message to actor
+        let addr = self.actor_address.clone();
+        actix::spawn(async move {
+            addr.send(StartNotifierCycle).await.unwrap_or_else(|e| {
+                error!("Failed to start fetch cycle: {}", e);
+            });
+        });
         Ok(())
     }
 
     fn stop(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("NotifierManager stopped");
+        // Send stop message to actor
+        let addr = self.actor_address.clone();
+        actix::spawn(async move {
+            addr.send(StopNotifierCycle).await.unwrap_or_else(|e| {
+                error!("Failed to stop fetch cycle: {}", e);
+            });
+        });
         Ok(())
     }
 }

@@ -40,10 +40,7 @@ pub struct StopFetchCycle;
 struct RunFetchCycle;
 
 /// Actor implementation for FetcherManager
-pub struct FetcherActor<
-    T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
-> {
+pub struct FetcherActor<T, S> {
     fetchers: Arc<RwLock<HashMap<String, Box<dyn Fetcher<T> + Send + Sync>>>>,
     storage: S,
     interval_duration: Duration,
@@ -51,10 +48,10 @@ pub struct FetcherActor<
     thread_count: usize,
 }
 
-impl<
-        T: Clone + Send + Sync + 'static,
-        S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
-    > FetcherActor<T, S>
+impl<T, S> FetcherActor<T, S>
+where
+    T: Clone + Send + Sync + 'static,
+    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     pub fn new(interval_duration: Duration, storage: S, thread_count: usize) -> Self {
         Self {
@@ -68,10 +65,10 @@ impl<
 }
 
 // Required implementation for Actix actors
-impl<
-        T: Clone + Send + Sync + 'static,
-        S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
-    > Actor for FetcherActor<T, S>
+impl<T, S> Actor for FetcherActor<T, S>
+where
+    T: Clone + Send + Sync + 'static,
+    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Context = Context<Self>;
 
@@ -85,10 +82,10 @@ impl<
 }
 
 // Handler implementations for messages
-impl<
-        T: Clone + Send + Sync + 'static,
-        S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
-    > Handler<AddFetcher<T>> for FetcherActor<T, S>
+impl<T, S> Handler<AddFetcher<T>> for FetcherActor<T, S>
+where
+    T: Clone + Send + Sync + 'static,
+    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = ();
 
@@ -105,10 +102,10 @@ impl<
     }
 }
 
-impl<
-        T: Clone + Send + Sync + 'static,
-        S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
-    > Handler<RemoveFetcher> for FetcherActor<T, S>
+impl<T, S> Handler<RemoveFetcher> for FetcherActor<T, S>
+where
+    T: Clone + Send + Sync + 'static,
+    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = MessageResult<RemoveFetcher>;
 
@@ -125,10 +122,10 @@ impl<
     }
 }
 
-impl<
-        T: Clone + Send + Sync + 'static,
-        S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
-    > Handler<StartFetchCycle> for FetcherActor<T, S>
+impl<T, S> Handler<StartFetchCycle> for FetcherActor<T, S>
+where
+    T: Clone + Send + Sync + 'static,
+    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = ();
 
@@ -142,10 +139,10 @@ impl<
     }
 }
 
-impl<
-        T: Clone + Send + Sync + 'static,
-        S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
-    > Handler<StopFetchCycle> for FetcherActor<T, S>
+impl<T, S> Handler<StopFetchCycle> for FetcherActor<T, S>
+where
+    T: Clone + Send + Sync + 'static,
+    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = ();
 
@@ -156,10 +153,10 @@ impl<
     }
 }
 
-impl<
-        T: Clone + Send + Sync + 'static,
-        S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
-    > Handler<RunFetchCycle> for FetcherActor<T, S>
+impl<T, S> Handler<RunFetchCycle> for FetcherActor<T, S>
+where
+    T: Clone + Send + Sync + 'static,
+    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = ();
 
@@ -182,14 +179,14 @@ impl<
 }
 
 /// Run the fetch cycle once
-pub(crate) async fn run_fetch_cycle<
-    T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + 'static,
->(
+pub(crate) async fn run_fetch_cycle<T, S>(
     fetchers: Arc<RwLock<HashMap<String, Box<dyn Fetcher<T> + Send + Sync>>>>,
     storage: S,
     thread_count: usize,
-) {
+) where
+    T: Clone + Send + Sync + 'static,
+    S: FetchStorage<T> + Clone + Send + Sync + 'static,
+{
     let fetcher_names: Vec<String> = {
         let fetchers = fetchers.read().await;
         fetchers.keys().cloned().collect()

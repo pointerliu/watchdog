@@ -3,12 +3,14 @@ pub mod managers;
 pub mod notifiers;
 pub mod storage;
 pub mod subscription;
+pub mod watchdog;
 
 pub use fetchers::{FetchResult, Fetcher};
 pub use managers::Manager;
 pub use notifiers::composition::CompositeNotifier;
 pub use notifiers::{ConsoleNotifier, EmailNotifier, Notification, Notifier};
 pub use subscription::{Subscription, SubscriptionCriteria, SubscriptionManager};
+pub use watchdog::{Watchdog, WatchdogConfig};
 
 #[derive(Debug, thiserror::Error)]
 pub enum FrameworkError {

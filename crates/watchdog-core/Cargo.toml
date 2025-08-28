@@ -9,6 +9,10 @@ license = "MIT OR Apache-2.0"
 name = "subscription_system"
 path = "examples/subscription_system.rs"
 
+[[example]]
+name = "watchdog_system"
+path = "examples/watchdog_system.rs"
+
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }

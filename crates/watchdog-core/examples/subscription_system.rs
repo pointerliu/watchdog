@@ -178,10 +178,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Create a notifier manager
     let notifier_manager =
-        NotifierManager::<String, SimpleSubscriptionCriteria>::new(notifier, subscription_manager);
+        NotifierManager::<String, SimpleSubscriptionCriteria>::new(subscription_manager);
     notifier_manager
         .start()
         .map_err(|e| e as Box<dyn std::error::Error + Send + Sync>)?;
+    
+    // Add the notifier for users
+    notifier_manager.add_notifier("user1".to_string(), notifier.clone()).await;
+    notifier_manager.add_notifier("user2".to_string(), notifier).await;
 
     // In a real system, you would have a mechanism to trigger notifications
     // when new data is fetched. For this example, we'll just run for a while.

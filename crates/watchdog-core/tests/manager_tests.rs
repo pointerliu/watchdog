@@ -186,16 +186,14 @@ async fn test_notifier_manager() {
 
     // Create notifier manager
     let notifier_manager = NotifierManager::<String, TestSubscriptionCriteria>::new(
-        notifier.clone(),
         subscription_manager,
     );
     notifier_manager.start().unwrap();
+    
+    // Add the notifier for the user
+    notifier_manager.add_notifier("test_user".to_string(), notifier.clone()).await;
 
-    let notification = Notification::new(
-        "test_user".to_string(),
-        "test_sub".to_string(),
-        "this is a test message".to_string(),
-    );
+    let notification = "this is a test message".to_string();
 
     // Send a notification
     notifier_manager

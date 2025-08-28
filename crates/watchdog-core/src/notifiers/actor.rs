@@ -20,10 +20,18 @@ pub struct AddNotifier<T: Clone + Send + Sync + 'static> {
     pub notifier: Arc<dyn Notifier<T> + Send + Sync>,
 }
 
-/// Message to remove notifiers for a user
+/// Message to remove a specific notifier for a user
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct RemoveNotifier {
+    pub user_id: String,
+    pub notifier_name: String,
+}
+
+/// Message to remove all notifiers for a user
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct RemoveAllNotifiers {
     pub user_id: String,
 }
 
@@ -118,21 +126,21 @@ where
                 };
 
                 let user_id = subscription.user_id.clone();
-                let notifiers = user_notifiers
-                    .get(&user_id)
-                    .expect("There is a user, no notifiers.");
-
-                for notifier in notifiers.iter() {
-                    let notifier = notifier.clone();
-                    let notification = notification.clone();
-                    match notifier.send(notification).await {
-                        Ok(()) => {
-                            info!("Successfully sent notification to user {}", user_id);
-                        }
-                        Err(e) => {
-                            error!("Failed to send notification to user {}: {}", user_id, e);
+                if let Some(notifiers) = user_notifiers.get(&user_id) {
+                    for notifier in notifiers.iter() {
+                        let notifier = notifier.clone();
+                        let notification = notification.clone();
+                        match notifier.send(notification).await {
+                            Ok(()) => {
+                                info!("Successfully sent notification to user {}", user_id);
+                            }
+                            Err(e) => {
+                                error!("Failed to send notification to user {}: {}", user_id, e);
+                            }
                         }
                     }
+                } else {
+                    info!("No notifiers found for user {}", user_id);
                 }
             }
 
@@ -153,14 +161,14 @@ where
 
     fn handle(&mut self, msg: AddNotifier<T>, _ctx: &mut Self::Context) -> Self::Result {
         let user_id = msg.user_id;
-        let notifier = msg.notifier;
+        let notifier = msg.notifier.clone();
 
         self.user_notifiers
             .entry(user_id.clone())
             .or_insert_with(Vec::new)
-            .push(notifier);
+            .push(msg.notifier);
 
-        info!("Added notifier for user {}", user_id);
+        info!("Added notifier '{}' for user {}", notifier.name(), user_id);
     }
 }
 
@@ -176,9 +184,37 @@ where
 
     fn handle(&mut self, msg: RemoveNotifier, _ctx: &mut Self::Context) -> Self::Result {
         let user_id = msg.user_id;
+        let notifier_name = msg.notifier_name;
+        
+        if let Some(mut notifiers) = self.user_notifiers.get_mut(&user_id) {
+            // Remove specific notifier by name
+            notifiers.retain(|notifier| notifier.name() != notifier_name);
+            
+            // If no notifiers left for this user, remove the entry entirely
+            if notifiers.is_empty() {
+                self.user_notifiers.remove(&user_id);
+            }
+        }
+        
+        info!("Removed notifier '{}' for user {}", notifier_name, user_id);
+    }
+}
+
+impl<T: Clone, C: crate::SubscriptionCriteria + 'static> Handler<RemoveAllNotifiers>
+    for NotifierActor<T, C>
+where
+    T: Clone + Send + Sync + 'static,
+    C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,
+    C::Id: Send + Sync + Unpin + 'static,
+    C: Send + Sync + Clone + Unpin + 'static,
+{
+    type Result = ();
+
+    fn handle(&mut self, msg: RemoveAllNotifiers, _ctx: &mut Self::Context) -> Self::Result {
+        let user_id = msg.user_id;
         
         self.user_notifiers.remove(&user_id);
         
-        info!("Removed notifiers for user {}", user_id);
+        info!("Removed all notifiers for user {}", user_id);
     }
 }

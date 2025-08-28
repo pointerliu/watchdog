@@ -45,4 +45,10 @@ where
         &self,
         notification: Notification<T>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+    
+    /// Get the name of this notifier
+    fn name(&self) -> &str;
+    
+    /// Set the name of this notifier
+    fn set_name(&mut self, name: String);
 }

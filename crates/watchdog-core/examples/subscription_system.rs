@@ -174,7 +174,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
 
     // Create a notifier
-    let notifier = Arc::new(ConsoleNotifier);
+    let notifier = Arc::new(ConsoleNotifier::new("console".to_string()));
 
     // Create a notifier manager
     let notifier_manager =

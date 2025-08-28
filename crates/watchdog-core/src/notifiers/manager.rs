@@ -1,4 +1,4 @@
-use crate::notifiers::actor::{AddNotifier, NotifierActor, RemoveNotifier, SendContent};
+use crate::notifiers::actor::{AddNotifier, NotifierActor, RemoveAllNotifiers, RemoveNotifier, SendContent};
 use crate::{Manager, Notifier, SubscriptionCriteria, SubscriptionManager};
 use actix::prelude::*;
 use std::sync::Arc;
@@ -62,13 +62,23 @@ where
             })
     }
 
-    /// Remove all notifiers for a specific user
-    pub async fn remove_notifier(&self, user_id: String) {
+    /// Remove a specific notifier for a user by name
+    pub async fn remove_notifier(&self, user_id: String, notifier_name: String) {
         self.actor_address
-            .send(RemoveNotifier { user_id })
+            .send(RemoveNotifier { user_id, notifier_name })
             .await
             .unwrap_or_else(|e| {
                 error!("Failed to remove notifier: {}", e);
+            })
+    }
+
+    /// Remove all notifiers for a specific user
+    pub async fn remove_all_notifiers(&self, user_id: String) {
+        self.actor_address
+            .send(RemoveAllNotifiers { user_id })
+            .await
+            .unwrap_or_else(|e| {
+                error!("Failed to remove all notifiers: {}", e);
             })
     }
 }

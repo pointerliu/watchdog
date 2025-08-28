@@ -9,6 +9,7 @@ use tracing::info;
 /// A composite notifier that can send notifications through multiple channels
 #[derive(Clone)]
 pub struct CompositeNotifier<T: Clone> {
+    name: String,
     notifiers: Arc<RwLock<HashMap<String, Box<dyn Notifier<T> + Send + Sync>>>>,
 }
 
@@ -21,6 +22,7 @@ impl<T: Clone> Default for CompositeNotifier<T> {
 impl<T: Clone> CompositeNotifier<T> {
     pub fn new() -> Self {
         Self {
+            name: "composite".to_string(),
             notifiers: Arc::new(RwLock::new(HashMap::new())),
         }
     }
@@ -41,6 +43,11 @@ impl<T: Clone> CompositeNotifier<T> {
     pub async fn list_notifiers(&self) -> Vec<String> {
         let notifiers = self.notifiers.read().await;
         notifiers.keys().cloned().collect()
+    }
+    
+    /// Set the name of this composite notifier
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
     }
 }
 
@@ -98,5 +105,13 @@ impl<T: Clone + Send + Sync + 'static> Notifier<T> for CompositeNotifier<T> {
         }
 
         Ok(())
+    }
+    
+    fn name(&self) -> &str {
+        &self.name
+    }
+    
+    fn set_name(&mut self, name: String) {
+        self.name = name;
     }
 }

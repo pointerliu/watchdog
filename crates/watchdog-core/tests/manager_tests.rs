@@ -50,12 +50,14 @@ impl Fetcher<String> for TestFetcher {
 // A test notifier to capture notifications
 #[derive(Clone)]
 struct TestNotifier {
+    name: String,
     notifications: Arc<tokio::sync::Mutex<Vec<Notification<String>>>>,
 }
 
 impl TestNotifier {
-    fn new() -> Self {
+    fn new(name: String) -> Self {
         Self {
+            name,
             notifications: Arc::new(tokio::sync::Mutex::new(Vec::new())),
         }
     }
@@ -73,6 +75,14 @@ impl Notifier<String> for TestNotifier {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         self.notifications.lock().await.push(notification);
         Ok(())
+    }
+    
+    fn name(&self) -> &str {
+        &self.name
+    }
+    
+    fn set_name(&mut self, name: String) {
+        self.name = name;
     }
 }
 
@@ -182,7 +192,7 @@ async fn test_notifier_manager() {
     }
 
     // Create a test notifier
-    let notifier = Arc::new(TestNotifier::new());
+    let notifier = Arc::new(TestNotifier::new("test".to_string()));
 
     // Create notifier manager
     let notifier_manager = NotifierManager::<String, TestSubscriptionCriteria>::new(

@@ -8,6 +8,7 @@ use tokio::sync::RwLock;
 /// Email notifier for sending notifications via email
 #[derive(Clone)]
 pub struct EmailNotifier {
+    name: String,
     /// SMTP server configuration
     smtp_server: String,
     smtp_port: u16,
@@ -20,12 +21,14 @@ pub struct EmailNotifier {
 impl EmailNotifier {
     /// Create a new EmailNotifier with SMTP configuration
     pub fn new(
+        name: String,
         smtp_server: String,
         smtp_port: u16,
         smtp_username: String,
         smtp_password: String,
     ) -> Self {
         Self {
+            name,
             smtp_server,
             smtp_port,
             smtp_username,
@@ -88,5 +91,13 @@ impl<T: std::fmt::Display + Clone + Send + Sync + 'static> Notifier<T> for Email
             tracing::warn!("No email address found for user {}", notification.user_id);
             Err(format!("No email address found for user {}", notification.user_id).into())
         }
+    }
+    
+    fn name(&self) -> &str {
+        &self.name
+    }
+    
+    fn set_name(&mut self, name: String) {
+        self.name = name;
     }
 }

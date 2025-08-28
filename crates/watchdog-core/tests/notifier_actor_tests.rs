@@ -60,7 +60,7 @@ async fn test_notifier_manager_with_actix() {
         NotifierManager::<String, TestSubscriptionCriteria>::new(notifier, subscription_manager);
 
     // Send a notification
-    let result = notifier_manager.send_notification(notification).await;
+    let result = notifier_manager.send_content(notification).await;
 
     // The result should be Ok
     assert!(result.is_ok());

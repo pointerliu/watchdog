@@ -199,7 +199,7 @@ async fn test_notifier_manager() {
 
     // Send a notification
     notifier_manager
-        .send_notification(notification)
+        .send_content(notification)
         .await
         .unwrap();
 

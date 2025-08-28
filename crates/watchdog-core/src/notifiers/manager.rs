@@ -1,4 +1,4 @@
-use crate::notifiers::actor::{NotifierActor, SendNotification};
+use crate::notifiers::actor::{NotifierActor, SendContent};
 use crate::{Manager, Notification, Notifier, SubscriptionCriteria, SubscriptionManager};
 use actix::prelude::*;
 use std::sync::Arc;
@@ -24,26 +24,23 @@ where
     C::Id: Send + Sync + Unpin + 'static,
     C: Send + Sync + Clone + Unpin + 'static,
 {
-    pub fn new(
-        notifier: Arc<dyn Notifier<T> + Send + Sync>,
-        subscription_manager: Arc<RwLock<SubscriptionManager<C>>>,
-    ) -> Self {
-        let actor = NotifierActor::new(notifier, subscription_manager);
+    pub fn new(subscription_manager: Arc<RwLock<SubscriptionManager<C>>>) -> Self {
+        let actor = NotifierActor::new(subscription_manager);
         let actor_address = actor.start();
 
         Self { actor_address }
     }
 
     /// Send notifications for the given content to all matching subscribers
-    pub async fn send_notification(
+    pub async fn send_content(
         &self,
-        notification: Notification<T>,
+        content: T,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>
     where
         T: Clone + Into<C::Content>,
     {
         self.actor_address
-            .send(SendNotification { notification })
+            .send(SendContent { content })
             .await
             .unwrap_or_else(|e| {
                 error!("Failed to send notifications: {}", e);

@@ -1,5 +1,6 @@
 use crate::{Notification, Notifier, SubscriptionManager};
 use actix::prelude::*;
+use dashmap::DashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{error, info};
@@ -7,11 +8,11 @@ use tracing::{error, info};
 /// Message to send notifications
 #[derive(Message)]
 #[rtype(result = "Result<(), Box<dyn std::error::Error + Send + Sync>>")]
-pub struct SendNotification<T: Clone + Send + Sync + 'static>
+pub struct SendContent<T: Clone + Send + Sync + 'static>
 where
     T: Send + Sync + 'static,
 {
-    pub notification: Notification<T>,
+    pub content: T,
 }
 
 /// Actor implementation for NotifierManager
@@ -22,7 +23,8 @@ where
     C: Send + Sync + Clone + Unpin + 'static,
     T: Send + Sync + 'static,
 {
-    notifier: Arc<dyn Notifier<T> + Send + Sync>,
+    // <user_id, notifier>
+    user_notifiers: DashMap<String, Vec<Arc<dyn Notifier<T> + Send + Sync>>>,
     subscription_manager: Arc<RwLock<SubscriptionManager<C>>>,
 }
 
@@ -33,12 +35,9 @@ where
     C: Send + Sync + Clone + Unpin + 'static,
     T: Send + Sync + 'static,
 {
-    pub fn new(
-        notifier: Arc<dyn Notifier<T> + Send + Sync>,
-        subscription_manager: Arc<RwLock<SubscriptionManager<C>>>,
-    ) -> Self {
+    pub fn new(subscription_manager: Arc<RwLock<SubscriptionManager<C>>>) -> Self {
         Self {
-            notifier,
+            user_notifiers: DashMap::new(),
             subscription_manager,
         }
     }
@@ -64,7 +63,7 @@ where
 }
 
 // Handler implementations for messages
-impl<T: Clone, C: crate::SubscriptionCriteria + 'static> Handler<SendNotification<T>>
+impl<T: Clone, C: crate::SubscriptionCriteria + 'static> Handler<SendContent<T>>
     for NotifierActor<T, C>
 where
     T: Clone + Into<C::Content> + Send + Sync + 'static,
@@ -74,10 +73,9 @@ where
 {
     type Result = ResponseFuture<Result<(), Box<dyn std::error::Error + Send + Sync>>>;
 
-    fn handle(&mut self, msg: SendNotification<T>, _ctx: &mut Self::Context) -> Self::Result {
-        let notifier = self.notifier.clone();
+    fn handle(&mut self, msg: SendContent<T>, _ctx: &mut Self::Context) -> Self::Result {
         let subscription_manager = self.subscription_manager.clone();
-        let content = msg.notification.content;
+        let content = msg.content;
 
         Box::pin(async move {
             // Get matching subscriptions using the actor
@@ -106,18 +104,28 @@ where
                     timestamp,
                 };
 
-                match notifier.send(notification).await {
-                    Ok(()) => {
-                        info!(
-                            "Successfully sent notification to user {}",
-                            subscription.user_id
-                        );
-                    }
-                    Err(e) => {
-                        error!(
-                            "Failed to send notification to user {}: {}",
-                            subscription.user_id, e
-                        );
+                let user_id = subscription.user_id;
+                let notifiers = self
+                    .user_notifiers
+                    .get(&user_id)
+                    .expect("There is a user, no notifiers.");
+
+                for notifer in notifiers.iter() {
+                    let notifier = notifer.clone();
+                    let notification = notification.clone();
+                    match notifier.send(notification).await {
+                        Ok(()) => {
+                            info!(
+                                "Successfully sent notification to user {}",
+                                subscription.user_id
+                            );
+                        }
+                        Err(e) => {
+                            error!(
+                                "Failed to send notification to user {}: {}",
+                                subscription.user_id, e
+                            );
+                        }
                     }
                 }
             }

@@ -72,6 +72,7 @@ where
 
     fn handle(&mut self, msg: SendContent<T>, _ctx: &mut Self::Context) -> Self::Result {
         let subscription_manager = self.subscription_manager.clone();
+        let user_notifiers = self.user_notifiers.clone();
         let content = msg.content;
 
         Box::pin(async move {
@@ -101,27 +102,20 @@ where
                     timestamp,
                 };
 
-                let user_id = subscription.user_id;
-                let notifiers = self
-                    .user_notifiers
+                let user_id = subscription.user_id.clone();
+                let notifiers = user_notifiers
                     .get(&user_id)
                     .expect("There is a user, no notifiers.");
 
-                for notifer in notifiers.iter() {
-                    let notifier = notifer.clone();
+                for notifier in notifiers.iter() {
+                    let notifier = notifier.clone();
                     let notification = notification.clone();
                     match notifier.send(notification).await {
                         Ok(()) => {
-                            info!(
-                                "Successfully sent notification to user {}",
-                                subscription.user_id
-                            );
+                            info!("Successfully sent notification to user {}", user_id);
                         }
                         Err(e) => {
-                            error!(
-                                "Failed to send notification to user {}: {}",
-                                subscription.user_id, e
-                            );
+                            error!("Failed to send notification to user {}: {}", user_id, e);
                         }
                     }
                 }

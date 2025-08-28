@@ -124,6 +124,10 @@ async fn main() -> Result<(), FrameworkError> {
     let watchdog: Watchdog<String, SimpleSubscriptionCriteria, FetchedDataStorage<String>> =
         Watchdog::with_defaults(storage);
 
+    // Start the watchdog system
+    println!("Starting watchdog system...");
+    watchdog.start()?;
+
     // Create some sample fetchers
     let fetcher1 = SimpleFetcher::new(
         "news_source_1".to_string(),
@@ -178,10 +182,6 @@ async fn main() -> Result<(), FrameworkError> {
     // Add subscriptions to the watchdog
     watchdog.add_subscription(subscription1).await?;
     watchdog.add_subscription(subscription2).await?;
-
-    // Start the watchdog system
-    println!("Starting watchdog system...");
-    watchdog.start()?;
 
     // Let it run for a while
     println!("Watchdog system running for 30 seconds...");

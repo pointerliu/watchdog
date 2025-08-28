@@ -8,10 +8,7 @@ use tracing::{error, info};
 /// Message to send notifications
 #[derive(Message)]
 #[rtype(result = "Result<(), Box<dyn std::error::Error + Send + Sync>>")]
-pub struct SendContent<T: Clone + Send + Sync + 'static>
-where
-    T: Send + Sync + 'static,
-{
+pub struct SendContent<T: Clone + Send + Sync + 'static> {
     pub content: T,
 }
 

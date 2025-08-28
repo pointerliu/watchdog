@@ -9,10 +9,10 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
 use watchdog_core::fetchers::Fetcher;
-use watchdog_core::notifiers::{ConsoleNotifier, Notifier};
+use watchdog_core::notifiers::ConsoleNotifier;
 use watchdog_core::storage::FetchStorage;
 use watchdog_core::subscription::{Subscription, SubscriptionCriteria};
-use watchdog_core::{FetchResult, FrameworkError, Notification, Watchdog, WatchdogConfig};
+use watchdog_core::{FetchResult, FrameworkError, Watchdog};
 
 // A simple fetcher implementation for demonstration
 #[derive(Clone)]

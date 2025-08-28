@@ -2418,10 +2418,14 @@ name = "watchdog-core"
 version = "0.1.0"
 dependencies = [
  "actix",
+ "arxiv-rs",
  "async-trait",
+ "chrono",
  "dashmap",
+ "derive_builder",
  "futures",
  "lettre",
+ "log",
  "serde",
  "serde_json",
  "thiserror",

@@ -6,16 +6,17 @@ use actix_web::{web, HttpResponse, Responder};
 use tracing::info;
 
 use crate::common::app_state::AppState;
-use crate::common::bootstrap::SimpleSubscriptionCriteria;
 use crate::common::dto::ApiResponse;
 use crate::domains::subscription::dto::subscription_dto::{
     CreateSubscriptionRequest, SubscriptionResponse,
 };
 use watchdog_core::subscription::Subscription;
+use watchdog_service::arxiv::criteria::ArxivCriteria;
+use watchdog_service::arxiv::model::ArxivPaper;
 
 /// Create a new subscription
 pub async fn create_subscription(
-    data: web::Data<AppState<String, SimpleSubscriptionCriteria>>,
+    data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
     req: web::Json<CreateSubscriptionRequest>,
 ) -> impl Responder {
     info!(
@@ -23,7 +24,7 @@ pub async fn create_subscription(
         req.user_id, req.criteria_id
     );
 
-    let criteria = SimpleSubscriptionCriteria::new(req.criteria_id.clone(), req.keywords.clone());
+    let criteria = ArxivCriteria::new(req.criteria_id.clone(), req.keywords.clone());
     let subscription = Subscription::new(req.user_id.clone(), criteria);
 
     match data.watchdog.add_subscription(subscription).await {
@@ -45,7 +46,7 @@ pub async fn create_subscription(
 
 /// Remove a subscription by criteria ID
 pub async fn remove_subscription(
-    data: web::Data<AppState<String, SimpleSubscriptionCriteria>>,
+    data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
     path: web::Path<String>,
 ) -> impl Responder {
     let criteria_id = path.into_inner();

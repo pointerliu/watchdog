@@ -13,36 +13,6 @@ use crate::common::app_state::AppState;
 use watchdog_core::subscription::SubscriptionCriteria;
 use watchdog_core::{FetchResult, Watchdog};
 
-// For now, we'll use simple string-based content for our example
-// In a real application, this would be your domain model
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct SimpleSubscriptionCriteria {
-    id: String,
-    keywords: Vec<String>,
-}
-
-impl SimpleSubscriptionCriteria {
-    pub fn new(id: String, keywords: Vec<String>) -> Self {
-        Self { id, keywords }
-    }
-}
-
-impl SubscriptionCriteria for SimpleSubscriptionCriteria {
-    type Id = String;
-    type Content = String;
-
-    fn matches(&self, content: &String) -> bool {
-        self.keywords
-            .iter()
-            .any(|keyword| content.to_lowercase().contains(&keyword.to_lowercase()))
-    }
-
-    fn id(&self) -> &Self::Id {
-        &self.id
-    }
-}
-
 /// Bootstrap the application by creating and wiring all components
 pub async fn bootstrap_app<T, C>() -> Data<AppState<T, C>>
 where

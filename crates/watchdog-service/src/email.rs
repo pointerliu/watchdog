@@ -4,6 +4,7 @@ use lettre::{
     AsyncSmtpTransport, AsyncTransport, Tokio1Executor,
 };
 use std::env;
+use log::{debug, trace};
 
 #[derive(Clone)]
 pub struct EmailService {
@@ -18,7 +19,7 @@ pub struct EmailService {
 
 impl EmailService {
     /// Create a new EmailService instance.
-    /// 
+    ///
     /// This function reads SMTP configuration from environment variables:
     /// - SMTP_SERVER: The SMTP server address (e.g., "smtp.163.com")
     /// - SMTP_PORT: The SMTP server port (e.g., 465 for SSL/TLS, 587 for STARTTLS)
@@ -26,7 +27,7 @@ impl EmailService {
     /// - SMTP_PASSWORD: The SMTP password (your app password)
     /// - EMAIL_FROM: The sender's email address
     /// - SMTP_USE_TLS: Whether to use TLS ("true" or "false")
-    /// 
+    ///
     /// Different SMTP servers may require different ports and encryption methods:
     /// - 163.com: Port 465 with SSL/TLS (SMTP_USE_TLS=true)
     /// - Gmail: Port 587 with STARTTLS (SMTP_USE_TLS=false) or Port 465 with SSL/TLS
@@ -59,21 +60,21 @@ impl EmailService {
         let credentials = Credentials::new(self.smtp_username.clone(), self.smtp_password.clone());
 
         // Print debugging information
-        println!("SMTP Server: {}", self.smtp_server);
-        println!("SMTP Port: {}", self.smtp_port);
-        println!("SMTP Username: {}", self.smtp_username);
-        println!("Use TLS: {}", self.use_tls);
+        debug!("SMTP Server: {}", self.smtp_server);
+        debug!("SMTP Port: {}", self.smtp_port);
+        debug!("SMTP Username: {}", self.smtp_username);
+        debug!("Use TLS: {}", self.use_tls);
 
         let mailer: AsyncSmtpTransport<Tokio1Executor> = if self.use_tls {
             // Use TLS connection
-            println!("Using TLS connection");
+            trace!("Using TLS connection");
             AsyncSmtpTransport::<Tokio1Executor>::relay(&self.smtp_server)?
                 .port(self.smtp_port)
                 .credentials(credentials)
                 .build()
         } else {
             // Use STARTTLS connection
-            println!("Using STARTTLS connection");
+            trace!("Using STARTTLS connection");
             AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&self.smtp_server)?
                 .port(self.smtp_port)
                 .credentials(credentials)
@@ -88,13 +89,13 @@ impl EmailService {
             .body(String::from(body))?;
 
         match mailer.send(email).await {
-            Ok(_) => println!("Email sent successfully!"),
+            Ok(_) => debug!("Email sent successfully!"),
             Err(e) => {
-                println!("Failed to send email: {:?}", e);
+                debug!("Failed to send email: {:?}", e);
                 return Err(e.into());
             }
         }
-        
+
         Ok(())
     }
 }

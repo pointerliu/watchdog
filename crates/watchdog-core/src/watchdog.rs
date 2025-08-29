@@ -46,7 +46,6 @@ where
     C::Id: Send + Sync + Hash + Eq + Clone + Debug + 'static,
     <C as SubscriptionCriteria>::Id: Unpin,
 {
-    config: WatchdogConfig,
     fetcher_manager: FetcherManager<T>,
     notifier_manager: NotifierManager<T, C>,
     subscription_manager: Arc<RwLock<SubscriptionManager<C>>>,
@@ -77,7 +76,6 @@ where
         notifier_manager.set_receiver(receiver);
 
         Self {
-            config,
             fetcher_manager,
             notifier_manager,
             subscription_manager,

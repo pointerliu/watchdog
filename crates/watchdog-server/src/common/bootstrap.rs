@@ -8,7 +8,6 @@ use std::sync::Arc;
 use tracing::info;
 
 use crate::common::app_state::AppState;
-use watchdog_core::storage::FetchStorage;
 use watchdog_core::subscription::SubscriptionCriteria;
 use watchdog_core::{FetchResult, Watchdog};
 
@@ -42,49 +41,11 @@ impl SubscriptionCriteria for SimpleSubscriptionCriteria {
     }
 }
 
-// Storage implementation
-#[derive(Debug, Clone)]
-pub struct FetchedDataStorage<T: Clone> {
-    data: Arc<tokio::sync::RwLock<Vec<FetchResult<T>>>>,
-}
-
-impl<T: Clone> FetchedDataStorage<T> {
-    pub fn new() -> Self {
-        Self {
-            data: Arc::new(tokio::sync::RwLock::new(Vec::new())),
-        }
-    }
-}
-
-#[async_trait::async_trait]
-impl<T: Clone + Send + Sync> FetchStorage<T> for FetchedDataStorage<T> {
-    async fn store(&self, result: FetchResult<T>) {
-        let mut data = self.data.write().await;
-        data.push(result);
-    }
-
-    async fn get_all(&self) -> Vec<FetchResult<T>> {
-        let data = self.data.read().await;
-        data.clone()
-    }
-
-    async fn clear(&self) {
-        let mut data = self.data.write().await;
-        data.clear();
-    }
-}
-
 /// Bootstrap the application by creating and wiring all components
-pub async fn bootstrap_app(
-) -> Data<AppState<String, SimpleSubscriptionCriteria, FetchedDataStorage<String>>> {
+pub async fn bootstrap_app() -> Data<AppState<String, SimpleSubscriptionCriteria>> {
     info!("Bootstrapping application");
-
-    // Create storage for fetched data
-    let storage = FetchedDataStorage::<String>::new();
-
     // Create the watchdog system with default configuration
-    let watchdog: Watchdog<String, SimpleSubscriptionCriteria, FetchedDataStorage<String>> =
-        Watchdog::with_defaults(storage);
+    let watchdog: Watchdog<String, SimpleSubscriptionCriteria> = Watchdog::with_defaults();
 
     // Start the watchdog system
     match watchdog.start() {

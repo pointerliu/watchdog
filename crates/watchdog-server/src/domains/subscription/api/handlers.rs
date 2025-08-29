@@ -6,7 +6,7 @@ use actix_web::{web, HttpResponse, Responder};
 use tracing::info;
 
 use crate::common::app_state::AppState;
-use crate::common::bootstrap::{FetchedDataStorage, SimpleSubscriptionCriteria};
+use crate::common::bootstrap::SimpleSubscriptionCriteria;
 use crate::common::dto::ApiResponse;
 use crate::domains::subscription::dto::subscription_dto::{
     CreateSubscriptionRequest, SubscriptionResponse,
@@ -15,7 +15,7 @@ use watchdog_core::subscription::Subscription;
 
 /// Create a new subscription
 pub async fn create_subscription(
-    data: web::Data<AppState<String, SimpleSubscriptionCriteria, FetchedDataStorage<String>>>,
+    data: web::Data<AppState<String, SimpleSubscriptionCriteria>>,
     req: web::Json<CreateSubscriptionRequest>,
 ) -> impl Responder {
     info!(
@@ -45,7 +45,7 @@ pub async fn create_subscription(
 
 /// Remove a subscription by criteria ID
 pub async fn remove_subscription(
-    data: web::Data<AppState<String, SimpleSubscriptionCriteria, FetchedDataStorage<String>>>,
+    data: web::Data<AppState<String, SimpleSubscriptionCriteria>>,
     path: web::Path<String>,
 ) -> impl Responder {
     let criteria_id = path.into_inner();

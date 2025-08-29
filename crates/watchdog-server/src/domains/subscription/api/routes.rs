@@ -8,7 +8,6 @@ use crate::domains::subscription::api::handlers::{create_subscription, remove_su
 
 /// Configure subscription routes
 pub fn subscription_routes(cfg: &mut web::ServiceConfig) {
-    cfg
-        .route("/subscriptions", web::post().to(create_subscription))
+    cfg.route("/subscriptions", web::post().to(create_subscription))
         .route("/subscriptions/{id}", web::delete().to(remove_subscription));
 }

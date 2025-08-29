@@ -1,4 +1,6 @@
-use crate::fetchers::actor::{AddFetcher, RemoveFetcher, SetSender, StartFetchCycle, StopFetchCycle};
+use crate::fetchers::actor::{
+    AddFetcher, RemoveFetcher, SetSender, StartFetchCycle, StopFetchCycle,
+};
 use crate::fetchers::FetcherActor;
 use crate::storage::FetchStorage;
 use crate::{FetchResult, Fetcher, Manager};

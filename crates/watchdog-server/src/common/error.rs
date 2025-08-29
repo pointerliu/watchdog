@@ -12,16 +12,16 @@ use watchdog_core::FrameworkError;
 pub enum AppError {
     #[error("Watchdog error: {0}")]
     Watchdog(#[from] FrameworkError),
-    
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    
+
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
-    
+
     #[error("Invalid input: {0}")]
     InvalidInput(String),
-    
+
     #[error("Not found: {0}")]
     NotFound(String),
 }
@@ -53,13 +53,12 @@ impl ResponseError for AppError {
             AppError::InvalidInput(e) => (400, format!("Invalid input: {}", e)),
             AppError::NotFound(e) => (404, format!("Not found: {}", e)),
         };
-        
+
         let error_response = ApiErrorResponse::new(status, message);
-        
-        HttpResponse::build(self.status_code())
-            .json(error_response)
+
+        HttpResponse::build(self.status_code()).json(error_response)
     }
-    
+
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
             AppError::Watchdog(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,

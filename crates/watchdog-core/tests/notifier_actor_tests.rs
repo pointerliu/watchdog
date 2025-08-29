@@ -1,7 +1,9 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use watchdog_core::notifiers::NotifierManager;
-use watchdog_core::{Notification, Notifier, Subscription, SubscriptionCriteria, SubscriptionManager};
+use watchdog_core::{
+    Notification, Notifier, Subscription, SubscriptionCriteria, SubscriptionManager,
+};
 
 // A test notifier to capture notifications
 #[derive(Clone)]
@@ -32,11 +34,11 @@ impl Notifier<String> for TestNotifier {
         self.notifications.lock().await.push(notification);
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         &self.name
     }
-    
+
     fn set_name(&mut self, name: String) {
         self.name = name;
     }
@@ -93,9 +95,11 @@ async fn test_notifier_manager_with_actix() {
     // Create a notifier manager
     let notifier_manager =
         NotifierManager::<String, TestSubscriptionCriteria>::new(subscription_manager);
-    
+
     // Add the notifier for the user
-    notifier_manager.add_notifier("test_user".to_string(), notifier).await;
+    notifier_manager
+        .add_notifier("test_user".to_string(), notifier)
+        .await;
 
     // Send a notification
     let result = notifier_manager.send_content(notification).await;

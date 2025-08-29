@@ -56,7 +56,7 @@ where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
- {
+{
     fn default() -> Self {
         Self::new()
     }

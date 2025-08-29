@@ -57,13 +57,7 @@ where
 impl<T, C, S> Watchdog<T, C, S>
 where
     T: Clone + Send + Sync + Debug + 'static + Unpin,
-    C: SubscriptionCriteria<Content = T>
-        + Send
-        + Sync
-        + Clone
-        + Debug
-        + 'static
-        + Unpin,
+    C: SubscriptionCriteria<Content = T> + Send + Sync + Clone + Debug + 'static + Unpin,
     C::Id: Send + Sync + Hash + Eq + Clone + Debug + 'static,
     S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
     <C as SubscriptionCriteria>::Id: Unpin,

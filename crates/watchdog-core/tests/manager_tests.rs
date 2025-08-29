@@ -76,11 +76,11 @@ impl Notifier<String> for TestNotifier {
         self.notifications.lock().await.push(notification);
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         &self.name
     }
-    
+
     fn set_name(&mut self, name: String) {
         self.name = name;
     }
@@ -195,21 +195,19 @@ async fn test_notifier_manager() {
     let notifier = Arc::new(TestNotifier::new("test".to_string()));
 
     // Create notifier manager
-    let notifier_manager = NotifierManager::<String, TestSubscriptionCriteria>::new(
-        subscription_manager,
-    );
+    let notifier_manager =
+        NotifierManager::<String, TestSubscriptionCriteria>::new(subscription_manager);
     notifier_manager.start().unwrap();
-    
+
     // Add the notifier for the user
-    notifier_manager.add_notifier("test_user".to_string(), notifier.clone()).await;
+    notifier_manager
+        .add_notifier("test_user".to_string(), notifier.clone())
+        .await;
 
     let notification = "this is a test message".to_string();
 
     // Send a notification
-    notifier_manager
-        .send_content(notification)
-        .await
-        .unwrap();
+    notifier_manager.send_content(notification).await.unwrap();
 
     // Check that notification was sent
     let notifications = notifier.get_notifications().await;

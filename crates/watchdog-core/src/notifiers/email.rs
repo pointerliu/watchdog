@@ -92,11 +92,11 @@ impl<T: std::fmt::Display + Clone + Send + Sync + 'static> Notifier<T> for Email
             Err(format!("No email address found for user {}", notification.user_id).into())
         }
     }
-    
+
     fn name(&self) -> &str {
         &self.name
     }
-    
+
     fn set_name(&mut self, name: String) {
         self.name = name;
     }

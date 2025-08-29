@@ -22,7 +22,7 @@ impl<T> ApiResponse<T> {
             data: Some(data),
         }
     }
-    
+
     /// Create a success response with a message but no data
     pub fn success_with_message(message: String) -> Self {
         Self {
@@ -31,7 +31,7 @@ impl<T> ApiResponse<T> {
             data: None,
         }
     }
-    
+
     /// Create an error response
     pub fn error(status: u16, message: String) -> Self {
         Self {

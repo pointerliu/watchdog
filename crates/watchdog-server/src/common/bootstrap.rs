@@ -10,7 +10,7 @@ use tracing::info;
 use crate::common::app_state::AppState;
 use watchdog_core::storage::FetchStorage;
 use watchdog_core::subscription::SubscriptionCriteria;
-use watchdog_core::{Watchdog, FetchResult};
+use watchdog_core::{FetchResult, Watchdog};
 
 // For now, we'll use simple string-based content for our example
 // In a real application, this would be your domain model
@@ -75,24 +75,25 @@ impl<T: Clone + Send + Sync> FetchStorage<T> for FetchedDataStorage<T> {
 }
 
 /// Bootstrap the application by creating and wiring all components
-pub async fn bootstrap_app() -> Data<AppState<String, SimpleSubscriptionCriteria, FetchedDataStorage<String>>> {
+pub async fn bootstrap_app(
+) -> Data<AppState<String, SimpleSubscriptionCriteria, FetchedDataStorage<String>>> {
     info!("Bootstrapping application");
-    
+
     // Create storage for fetched data
     let storage = FetchedDataStorage::<String>::new();
-    
+
     // Create the watchdog system with default configuration
     let watchdog: Watchdog<String, SimpleSubscriptionCriteria, FetchedDataStorage<String>> =
         Watchdog::with_defaults(storage);
-    
+
     // Start the watchdog system
     match watchdog.start() {
         Ok(_) => info!("Watchdog system started successfully"),
         Err(e) => panic!("Failed to start watchdog system: {}", e),
     }
-    
+
     // Create application state
     let app_state = AppState::new(Arc::new(watchdog));
-    
+
     Data::new(app_state)
 }

@@ -12,8 +12,15 @@ use watchdog_core::Watchdog;
 pub struct AppState<T, C, S>
 where
     T: Clone + Send + Sync + std::fmt::Debug + 'static + std::marker::Unpin,
-    C: SubscriptionCriteria<Content = T> + Send + Sync + Clone + std::fmt::Debug + 'static + std::marker::Unpin,
-    C::Id: Send + Sync + std::hash::Hash + Eq + Clone + std::fmt::Debug + 'static + std::marker::Unpin,
+    C: SubscriptionCriteria<Content = T>
+        + Send
+        + Sync
+        + Clone
+        + std::fmt::Debug
+        + 'static
+        + std::marker::Unpin,
+    C::Id:
+        Send + Sync + std::hash::Hash + Eq + Clone + std::fmt::Debug + 'static + std::marker::Unpin,
     S: FetchStorage<T> + Clone + Send + Sync + 'static + std::marker::Unpin,
 {
     pub watchdog: Arc<Watchdog<T, C, S>>,
@@ -22,8 +29,15 @@ where
 impl<T, C, S> AppState<T, C, S>
 where
     T: Clone + Send + Sync + std::fmt::Debug + 'static + std::marker::Unpin,
-    C: SubscriptionCriteria<Content = T> + Send + Sync + Clone + std::fmt::Debug + 'static + std::marker::Unpin,
-    C::Id: Send + Sync + std::hash::Hash + Eq + Clone + std::fmt::Debug + 'static + std::marker::Unpin,
+    C: SubscriptionCriteria<Content = T>
+        + Send
+        + Sync
+        + Clone
+        + std::fmt::Debug
+        + 'static
+        + std::marker::Unpin,
+    C::Id:
+        Send + Sync + std::hash::Hash + Eq + Clone + std::fmt::Debug + 'static + std::marker::Unpin,
     S: FetchStorage<T> + Clone + Send + Sync + 'static + std::marker::Unpin,
 {
     pub fn new(watchdog: Arc<Watchdog<T, C, S>>) -> Self {
@@ -34,8 +48,15 @@ where
 impl<T, C, S> Clone for AppState<T, C, S>
 where
     T: Clone + Send + Sync + std::fmt::Debug + 'static + std::marker::Unpin,
-    C: SubscriptionCriteria<Content = T> + Send + Sync + Clone + std::fmt::Debug + 'static + std::marker::Unpin,
-    C::Id: Send + Sync + std::hash::Hash + Eq + Clone + std::fmt::Debug + 'static + std::marker::Unpin,
+    C: SubscriptionCriteria<Content = T>
+        + Send
+        + Sync
+        + Clone
+        + std::fmt::Debug
+        + 'static
+        + std::marker::Unpin,
+    C::Id:
+        Send + Sync + std::hash::Hash + Eq + Clone + std::fmt::Debug + 'static + std::marker::Unpin,
     S: FetchStorage<T> + Clone + Send + Sync + 'static + std::marker::Unpin,
 {
     fn clone(&self) -> Self {

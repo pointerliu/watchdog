@@ -260,14 +260,14 @@ pub(crate) async fn run_fetch_cycle<T, S>(
             // Store the result if successful and return success status
             let success = if let Some((_name, result)) = fetch_result {
                 storage.store(result.clone()).await;
-                
+
                 // Send the result to notifiers if sender is available
                 if let Some(sender) = &sender {
                     if let Err(e) = sender.send(result) {
                         error!("Failed to send fetched data to notifiers: {}", e);
                     }
                 }
-                
+
                 true
             } else {
                 false

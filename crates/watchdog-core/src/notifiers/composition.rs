@@ -44,7 +44,7 @@ impl<T: Clone> CompositeNotifier<T> {
         let notifiers = self.notifiers.read().await;
         notifiers.keys().cloned().collect()
     }
-    
+
     /// Set the name of this composite notifier
     pub fn set_name(&mut self, name: String) {
         self.name = name;
@@ -106,11 +106,11 @@ impl<T: Clone + Send + Sync + 'static> Notifier<T> for CompositeNotifier<T> {
 
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         &self.name
     }
-    
+
     fn set_name(&mut self, name: String) {
         self.name = name;
     }

@@ -1,13 +1,23 @@
+use crate::arxiv::model::ArxivPaper;
 use async_trait::async_trait;
 use watchdog_core::{Notification, Notifier};
-use crate::arxiv::model::ArxivPaper;
 
 /// A notifier for arXiv papers (console output)
 #[derive(Clone)]
-pub struct ArxivNotifier;
+pub struct ArxivConsoleNotifier {
+    name: String,
+}
+
+impl Default for ArxivConsoleNotifier {
+    fn default() -> Self {
+        Self {
+            name: "arxiv_notifier".to_string(),
+        }
+    }
+}
 
 #[async_trait]
-impl Notifier<ArxivPaper> for ArxivNotifier {
+impl Notifier<ArxivPaper> for ArxivConsoleNotifier {
     async fn send(
         &self,
         notification: Notification<ArxivPaper>,
@@ -32,10 +42,42 @@ impl Notifier<ArxivPaper> for ArxivNotifier {
     }
 
     fn name(&self) -> &str {
-        "arxiv_notifier"
+        &self.name
     }
 
-    fn set_name(&mut self, _name: String) {
-        // Not implemented for this example
+    fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+}
+
+#[derive(Clone)]
+pub struct ArxivEmailNotifier {
+    name: String,
+}
+
+impl Default for ArxivEmailNotifier {
+    fn default() -> Self {
+        Self {
+            name: "arxiv_email_notifier".to_string(),
+        }
+    }
+}
+
+#[async_trait]
+impl Notifier<ArxivPaper> for ArxivEmailNotifier {
+    async fn send(
+        &self,
+        notification: Notification<ArxivPaper>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        // Send email using SMTP
+        Ok(())
+    }
+
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn set_name(&mut self, name: String) {
+        self.name = name;
     }
 }

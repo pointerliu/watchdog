@@ -11,7 +11,7 @@ use watchdog_core::{FrameworkError, Watchdog};
 use watchdog_service::arxiv::criteria::ArxivCriteria;
 use watchdog_service::arxiv::fetcher::ArxivFetcherBuilder;
 use watchdog_service::arxiv::model::ArxivPaper;
-use watchdog_service::arxiv::notifier::ArxivNotifier;
+use watchdog_service::arxiv::notifier::ArxivConsoleNotifier;
 
 #[actix::main]
 async fn main() -> Result<(), FrameworkError> {
@@ -47,8 +47,8 @@ async fn main() -> Result<(), FrameworkError> {
         .await?;
 
     // Create notifiers for users
-    let notifier1 = Arc::new(ArxivNotifier);
-    let notifier2 = Arc::new(ArxivNotifier);
+    let notifier1 = Arc::new(ArxivConsoleNotifier::default());
+    let notifier2 = Arc::new(ArxivConsoleNotifier::default());
 
     // Add notifiers to the watchdog
     watchdog

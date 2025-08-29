@@ -1,3 +1,4 @@
+use dotenv::dotenv;
 use watchdog_core::Notification;
 use watchdog_core::Notifier;
 use watchdog_service::arxiv::model::ArxivPaper;
@@ -5,6 +6,7 @@ use watchdog_service::arxiv::notifier::ArxivEmailNotifier;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    dotenv()?;
     // Create a sample arXiv paper
     let paper = ArxivPaper {
         id: "1234.56789".to_string(),
@@ -25,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Note: You'll need to set the following environment variables:
     // SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM
     let notifier =
-        ArxivEmailNotifier::new("arxiv_email_notifier", "recipient@example.com".to_string())?;
+        ArxivEmailNotifier::new("arxiv_email_notifier", "ellen7ions@163.com".to_string())?;
 
     // Send the notification
     notifier.send(notification).await?;

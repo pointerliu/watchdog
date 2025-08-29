@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateSubscriptionRequest {
     pub user_id: String,
-    pub criteria_id: String,
+    pub subscription_name: String,
     pub keywords: Vec<String>,
 }
 
@@ -16,11 +16,19 @@ pub struct CreateSubscriptionRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubscriptionResponse {
     pub user_id: String,
-    pub criteria_id: String,
+    pub subscription_name: String,
 }
 
-/// Request DTO for removing a subscription
+/// Response DTO for getting user subscriptions
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RemoveSubscriptionRequest {
-    pub criteria_id: String,
+pub struct UserSubscriptionsResponse {
+    pub user_id: String,
+    pub subscriptions: Vec<SubscriptionInfo>,
+}
+
+/// Information about a subscription
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubscriptionInfo {
+    pub subscription_name: String,
+    pub keywords: Vec<String>,
 }

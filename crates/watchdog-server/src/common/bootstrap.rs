@@ -4,26 +4,26 @@
 //! and wiring them together.
 
 use actix_web::web::Data;
-use std::fmt::Debug;
-use std::hash::Hash;
 use std::sync::Arc;
 use tracing::info;
 
 use crate::common::app_state::AppState;
-use watchdog_core::subscription::SubscriptionCriteria;
-use watchdog_core::{FetchResult, Watchdog};
+use watchdog_core::Watchdog;
+use watchdog_service::arxiv::fetcher::ArxivFetcher;
+use watchdog_service::arxiv::model::ArxivPaper;
+use watchdog_service::arxiv::criteria::ArxivCriteria;
 
 /// Bootstrap the application by creating and wiring all components
-pub async fn bootstrap_app<T, C>() -> Data<AppState<T, C>>
-where
-    T: Clone + Send + Sync + Debug + 'static + Unpin,
-    C: SubscriptionCriteria<Content = T> + Send + Sync + Clone + Debug + 'static + Unpin,
-    C::Id: Send + Sync + Hash + Eq + Clone + Debug + 'static,
-    <C as SubscriptionCriteria>::Id: Unpin,
-{
+pub async fn bootstrap_app() -> Data<AppState<ArxivPaper, ArxivCriteria>> {
     info!("Bootstrapping application");
     // Create the watchdog system with default configuration
-    let watchdog: Watchdog<T, C> = Watchdog::with_defaults();
+    let watchdog: Watchdog<ArxivPaper, ArxivCriteria> = Watchdog::with_defaults();
+
+    // Add default fetcher
+    let arxiv_fetcher = ArxivFetcher::default();
+    if let Err(e) = watchdog.add_fetcher("default_arxiv".to_string(), Box::new(arxiv_fetcher)).await {
+        panic!("Failed to add default fetcher: {}", e);
+    }
 
     // Start the watchdog system
     match watchdog.start() {

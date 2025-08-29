@@ -8,7 +8,8 @@ use actix_web::{middleware::Logger, App, HttpServer};
 use tracing::info;
 
 use watchdog_server::common::app_state::AppState;
-use watchdog_server::{app::app_config, common::bootstrap::bootstrap_app};
+use watchdog_server::app::app_config;
+use watchdog_server::common::bootstrap::bootstrap_app;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
 use watchdog_service::arxiv::model::ArxivPaper;
 

@@ -7,12 +7,37 @@ use tracing::info;
 
 use crate::common::app_state::AppState;
 use crate::common::dto::ApiResponse;
-use crate::domains::subscription::dto::subscription_dto::{
-    CreateSubscriptionRequest, SubscriptionResponse,
+use crate::domains::subscription::dto::{
+    CreateSubscriptionRequest, SubscriptionResponse, UserSubscriptionsResponse, SubscriptionInfo,
 };
 use watchdog_core::subscription::Subscription;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
 use watchdog_service::arxiv::model::ArxivPaper;
+
+/// Get user's current subscriptions
+pub async fn get_user_subscriptions(
+    _data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
+    path: web::Path<String>,
+) -> impl Responder {
+    let user_id = path.into_inner();
+    info!("Getting subscriptions for user: {}", user_id);
+    
+    // For now, we'll return mock data
+    let subscriptions = vec![
+        SubscriptionInfo {
+            subscription_name: "ml_papers".to_string(),
+            keywords: vec!["machine learning".to_string(), "AI".to_string()],
+        }
+    ];
+    
+    let response = UserSubscriptionsResponse {
+        user_id,
+        subscriptions,
+    };
+    
+    let api_response = ApiResponse::success(response);
+    HttpResponse::Ok().json(api_response)
+}
 
 /// Create a new subscription
 pub async fn create_subscription(
@@ -20,18 +45,18 @@ pub async fn create_subscription(
     req: web::Json<CreateSubscriptionRequest>,
 ) -> impl Responder {
     info!(
-        "Creating subscription for user: {}, criteria: {}",
-        req.user_id, req.criteria_id
+        "Creating subscription for user: {}, name: {}",
+        req.user_id, req.subscription_name
     );
 
-    let criteria = ArxivCriteria::new(req.criteria_id.clone(), req.keywords.clone());
+    let criteria = ArxivCriteria::new(req.subscription_name.clone(), req.keywords.clone());
     let subscription = Subscription::new(req.user_id.clone(), criteria);
 
     match data.watchdog.add_subscription(subscription).await {
         Ok(_) => {
             let response = SubscriptionResponse {
                 user_id: req.user_id.clone(),
-                criteria_id: req.criteria_id.clone(),
+                subscription_name: req.subscription_name.clone(),
             };
             let api_response = ApiResponse::success(response);
             HttpResponse::Ok().json(api_response)
@@ -44,15 +69,15 @@ pub async fn create_subscription(
     }
 }
 
-/// Remove a subscription by criteria ID
+/// Remove a subscription by name
 pub async fn remove_subscription(
     data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
     path: web::Path<String>,
 ) -> impl Responder {
-    let criteria_id = path.into_inner();
-    info!("Removing subscription with criteria ID: {}", criteria_id);
+    let subscription_name = path.into_inner();
+    info!("Removing subscription: {}", subscription_name);
 
-    match data.watchdog.remove_subscription(&criteria_id).await {
+    match data.watchdog.remove_subscription(&subscription_name).await {
         Ok(Some(_)) => {
             let response: ApiResponse<()> =
                 ApiResponse::success_with_message("Subscription removed successfully".to_string());

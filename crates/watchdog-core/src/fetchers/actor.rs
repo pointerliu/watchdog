@@ -1,4 +1,3 @@
-use crate::storage::FetchStorage;
 use crate::{FetchResult, Fetcher};
 use actix::prelude::*;
 use std::collections::HashMap;
@@ -47,24 +46,21 @@ pub struct SetSender<T: Clone + Send + Sync + 'static> {
 }
 
 /// Actor implementation for FetcherManager
-pub struct FetcherActor<T, S> {
+pub struct FetcherActor<T> {
     fetchers: Arc<RwLock<HashMap<String, Box<dyn Fetcher<T> + Send + Sync>>>>,
-    storage: S,
     interval_duration: Duration,
     running: bool,
     thread_count: usize,
     sender: Option<mpsc::UnboundedSender<FetchResult<T>>>,
 }
 
-impl<T, S> FetcherActor<T, S>
+impl<T> FetcherActor<T>
 where
     T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
-    pub fn new(interval_duration: Duration, storage: S, thread_count: usize) -> Self {
+    pub fn new(interval_duration: Duration, thread_count: usize) -> Self {
         Self {
             fetchers: Arc::new(RwLock::new(HashMap::new())),
-            storage,
             interval_duration,
             running: false,
             thread_count,
@@ -74,10 +70,9 @@ where
 }
 
 // Required implementation for Actix actors
-impl<T, S> Actor for FetcherActor<T, S>
+impl<T> Actor for FetcherActor<T>
 where
     T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Context = Context<Self>;
 
@@ -91,10 +86,9 @@ where
 }
 
 // Handler implementations for messages
-impl<T, S> Handler<AddFetcher<T>> for FetcherActor<T, S>
+impl<T> Handler<AddFetcher<T>> for FetcherActor<T>
 where
     T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = ();
 
@@ -111,10 +105,9 @@ where
     }
 }
 
-impl<T, S> Handler<RemoveFetcher> for FetcherActor<T, S>
+impl<T> Handler<RemoveFetcher> for FetcherActor<T>
 where
     T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = MessageResult<RemoveFetcher>;
 
@@ -131,10 +124,9 @@ where
     }
 }
 
-impl<T, S> Handler<StartFetchCycle> for FetcherActor<T, S>
+impl<T> Handler<StartFetchCycle> for FetcherActor<T>
 where
     T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = ();
 
@@ -148,10 +140,9 @@ where
     }
 }
 
-impl<T, S> Handler<StopFetchCycle> for FetcherActor<T, S>
+impl<T> Handler<StopFetchCycle> for FetcherActor<T>
 where
     T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = ();
 
@@ -162,10 +153,9 @@ where
     }
 }
 
-impl<T, S> Handler<SetSender<T>> for FetcherActor<T, S>
+impl<T> Handler<SetSender<T>> for FetcherActor<T>
 where
     T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = ();
 
@@ -174,10 +164,9 @@ where
     }
 }
 
-impl<T, S> Handler<RunFetchCycle> for FetcherActor<T, S>
+impl<T> Handler<RunFetchCycle> for FetcherActor<T>
 where
     T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     type Result = ();
 
@@ -189,26 +178,23 @@ where
 
         // Clone necessary data for the async task
         let fetchers = self.fetchers.clone();
-        let storage = self.storage.clone();
         let thread_count = self.thread_count;
         let sender = self.sender.clone();
 
         // Spawn the async fetch cycle
         actix::spawn(async move {
-            run_fetch_cycle(fetchers, storage, thread_count, sender).await;
+            run_fetch_cycle(fetchers, thread_count, sender).await;
         });
     }
 }
 
 /// Run the fetch cycle once
-pub(crate) async fn run_fetch_cycle<T, S>(
+pub(crate) async fn run_fetch_cycle<T>(
     fetchers: Arc<RwLock<HashMap<String, Box<dyn Fetcher<T> + Send + Sync>>>>,
-    storage: S,
     thread_count: usize,
     sender: Option<mpsc::UnboundedSender<FetchResult<T>>>,
 ) where
     T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + 'static,
 {
     let fetcher_names: Vec<String> = {
         let fetchers = fetchers.read().await;
@@ -230,7 +216,6 @@ pub(crate) async fn run_fetch_cycle<T, S>(
     // Spawn a task for each fetcher
     for name in fetcher_names {
         let fetchers = fetchers.clone();
-        let storage = storage.clone();
         let semaphore = semaphore.clone();
         let sender = sender.clone();
         let name_clone = name.clone();
@@ -259,8 +244,6 @@ pub(crate) async fn run_fetch_cycle<T, S>(
 
             // Store the result if successful and return success status
             let success = if let Some((_name, result)) = fetch_result {
-                storage.store(result.clone()).await;
-
                 // Send the result to notifiers if sender is available
                 if let Some(sender) = &sender {
                     if let Err(e) = sender.send(result) {

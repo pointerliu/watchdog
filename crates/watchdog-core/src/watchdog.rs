@@ -5,7 +5,6 @@
 
 use crate::fetchers::{Fetcher, FetcherManager};
 use crate::notifiers::{Notifier, NotifierManager};
-use crate::storage::FetchStorage;
 use crate::subscription::{Subscription, SubscriptionCriteria, SubscriptionManager};
 use crate::FrameworkError;
 use crate::Manager;
@@ -40,30 +39,28 @@ impl Default for WatchdogConfig {
 ///
 /// This struct provides a high-level API for managing the entire watchdog system.
 /// It connects fetchers, notifiers, and subscriptions together.
-pub struct Watchdog<T, C, S>
+pub struct Watchdog<T, C>
 where
     T: Clone + Send + Sync + Debug + 'static + Unpin,
     C: SubscriptionCriteria<Content = T> + Send + Sync + Clone + Debug + 'static + Unpin,
     C::Id: Send + Sync + Hash + Eq + Clone + Debug + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
     <C as SubscriptionCriteria>::Id: Unpin,
 {
     config: WatchdogConfig,
-    fetcher_manager: FetcherManager<T, S>,
+    fetcher_manager: FetcherManager<T>,
     notifier_manager: NotifierManager<T, C>,
     subscription_manager: Arc<RwLock<SubscriptionManager<C>>>,
 }
 
-impl<T, C, S> Watchdog<T, C, S>
+impl<T, C> Watchdog<T, C>
 where
     T: Clone + Send + Sync + Debug + 'static + Unpin,
     C: SubscriptionCriteria<Content = T> + Send + Sync + Clone + Debug + 'static + Unpin,
     C::Id: Send + Sync + Hash + Eq + Clone + Debug + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
     <C as SubscriptionCriteria>::Id: Unpin,
 {
     /// Create a new Watchdog system with the given configuration
-    pub fn new(config: WatchdogConfig, storage: S) -> Self {
+    pub fn new(config: WatchdogConfig) -> Self {
         // Create communication channel between fetchers and notifiers
         let (sender, receiver) = mpsc::unbounded_channel();
 
@@ -72,7 +69,7 @@ where
 
         // Create fetcher manager
         let mut fetcher_manager =
-            FetcherManager::new(config.fetch_interval, storage, config.fetch_worker_threads);
+            FetcherManager::new(config.fetch_interval, config.fetch_worker_threads);
         fetcher_manager.set_sender(sender);
 
         // Create notifier manager
@@ -172,7 +169,7 @@ where
     }
 
     /// Get a reference to the fetcher manager for advanced operations
-    pub fn fetcher_manager(&self) -> &FetcherManager<T, S> {
+    pub fn fetcher_manager(&self) -> &FetcherManager<T> {
         &self.fetcher_manager
     }
 
@@ -182,7 +179,7 @@ where
     }
 }
 
-impl<T, C, S> Watchdog<T, C, S>
+impl<T, C> Watchdog<T, C>
 where
     T: Clone + Send + Sync + Debug + 'static + std::marker::Unpin,
     C: SubscriptionCriteria<Content = T>
@@ -193,11 +190,10 @@ where
         + 'static
         + std::marker::Unpin,
     C::Id: Send + Sync + Hash + Eq + Clone + Debug + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
     <C as SubscriptionCriteria>::Id: Unpin,
 {
     /// Create a new Watchdog with default configuration
-    pub fn with_defaults(storage: S) -> Self {
-        Self::new(WatchdogConfig::default(), storage)
+    pub fn with_defaults() -> Self {
+        Self::new(WatchdogConfig::default())
     }
 }

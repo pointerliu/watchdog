@@ -2,7 +2,6 @@ use crate::fetchers::actor::{
     AddFetcher, RemoveFetcher, SetSender, StartFetchCycle, StopFetchCycle,
 };
 use crate::fetchers::FetcherActor;
-use crate::storage::FetchStorage;
 use crate::{FetchResult, Fetcher, Manager};
 use actix::prelude::*;
 use std::time::Duration;
@@ -10,27 +9,18 @@ use tokio::sync::mpsc;
 use tracing::error;
 
 /// Manager for fetchers that runs them periodically using Actix actors
-pub struct FetcherManager<
-    T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
-> {
-    actor_address: Addr<FetcherActor<T, S>>,
-    storage: S,
+pub struct FetcherManager<T: Clone + Send + Sync + 'static> {
+    actor_address: Addr<FetcherActor<T>>,
     sender: Option<mpsc::UnboundedSender<FetchResult<T>>>,
 }
 
-impl<
-        T: Clone + Send + Sync + 'static,
-        S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
-    > FetcherManager<T, S>
-{
-    pub fn new(interval_duration: Duration, storage: S, thread_count: usize) -> Self {
-        let actor = FetcherActor::new(interval_duration, storage.clone(), thread_count);
+impl<T: Clone + Send + Sync + 'static> FetcherManager<T> {
+    pub fn new(interval_duration: Duration, thread_count: usize) -> Self {
+        let actor = FetcherActor::new(interval_duration, thread_count);
         let actor_address = actor.start();
 
         Self {
             actor_address,
-            storage,
             sender: None,
         }
     }
@@ -59,11 +49,6 @@ impl<
         result
     }
 
-    /// Get the storage for fetched data
-    pub fn get_storage(&self) -> &S {
-        &self.storage
-    }
-
     /// Set the sender for the fetcher manager to send data to notifiers
     pub fn set_sender(&mut self, sender: mpsc::UnboundedSender<FetchResult<T>>) {
         self.sender = Some(sender.clone());
@@ -77,10 +62,9 @@ impl<
     }
 }
 
-impl<T, S> Manager for FetcherManager<T, S>
+impl<T> Manager for FetcherManager<T>
 where
     T: Clone + Send + Sync + 'static,
-    S: FetchStorage<T> + Clone + Send + Sync + Unpin + 'static,
 {
     fn start(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Send start message to actor

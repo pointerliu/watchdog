@@ -1,7 +1,6 @@
 pub mod fetchers;
 pub mod managers;
 pub mod notifiers;
-pub mod storage;
 pub mod subscription;
 pub mod watchdog;
 

@@ -1,11 +1,9 @@
-use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
 use watchdog_core::fetchers::FetcherManager;
 use watchdog_core::notifiers::NotifierManager;
-use watchdog_core::storage::FetchStorage;
 use watchdog_core::{
     FetchResult, Fetcher, Manager, Notification, Notifier, Subscription, SubscriptionCriteria,
     SubscriptionManager,
@@ -114,41 +112,9 @@ impl SubscriptionCriteria for TestSubscriptionCriteria {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct FetchedDataStorage<T: Clone> {
-    data: Arc<RwLock<Vec<FetchResult<T>>>>,
-}
-
-impl<T: Clone> FetchedDataStorage<T> {
-    pub fn new() -> Self {
-        Self {
-            data: Arc::new(RwLock::new(Vec::new())),
-        }
-    }
-}
-
-#[async_trait]
-impl<T: Clone + Send + Sync> FetchStorage<T> for FetchedDataStorage<T> {
-    async fn store(&self, result: FetchResult<T>) {
-        let mut data = self.data.write().await;
-        data.push(result);
-    }
-
-    async fn get_all(&self) -> Vec<FetchResult<T>> {
-        let data = self.data.read().await;
-        data.clone()
-    }
-
-    async fn clear(&self) {
-        let mut data = self.data.write().await;
-        data.clear();
-    }
-}
-
 #[actix::test]
 async fn test_fetcher_manager() {
-    let storage = FetchedDataStorage::<String>::new();
-    let fetcher_manager = FetcherManager::new(Duration::from_millis(100), storage, 4);
+    let fetcher_manager = FetcherManager::new(Duration::from_millis(100), 4);
 
     let fetcher = TestFetcher::new(vec!["test data".to_string()]);
 
@@ -164,13 +130,6 @@ async fn test_fetcher_manager() {
 
     // Stop the manager
     fetcher_manager.stop().unwrap();
-
-    // Check that data was stored
-    let storage = fetcher_manager.get_storage();
-    let data = storage.get_all().await;
-
-    assert!(!data.is_empty());
-    assert!(data[0].content.contains("test data"));
 }
 
 #[actix::test]

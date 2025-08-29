@@ -3,14 +3,11 @@
 //! This example shows how to set up and run a complete watchdog system
 //! with fetchers, notifiers, and subscriptions.
 
-use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::RwLock;
 use watchdog_core::fetchers::Fetcher;
 use watchdog_core::notifiers::ConsoleNotifier;
-use watchdog_core::storage::FetchStorage;
 use watchdog_core::subscription::{Subscription, SubscriptionCriteria};
 use watchdog_core::{FetchResult, FrameworkError, Watchdog};
 
@@ -81,48 +78,13 @@ impl SubscriptionCriteria for SimpleSubscriptionCriteria {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct FetchedDataStorage<T: Clone> {
-    data: Arc<RwLock<Vec<FetchResult<T>>>>,
-}
-
-impl<T: Clone> FetchedDataStorage<T> {
-    pub fn new() -> Self {
-        Self {
-            data: Arc::new(RwLock::new(Vec::new())),
-        }
-    }
-}
-
-#[async_trait]
-impl<T: Clone + Send + Sync> FetchStorage<T> for FetchedDataStorage<T> {
-    async fn store(&self, result: FetchResult<T>) {
-        let mut data = self.data.write().await;
-        data.push(result);
-    }
-
-    async fn get_all(&self) -> Vec<FetchResult<T>> {
-        let data = self.data.read().await;
-        data.clone()
-    }
-
-    async fn clear(&self) {
-        let mut data = self.data.write().await;
-        data.clear();
-    }
-}
-
 #[actix::main]
 async fn main() -> Result<(), FrameworkError> {
     // Initialize tracing
     tracing_subscriber::fmt::init();
 
-    // Create storage for fetched data
-    let storage = FetchedDataStorage::<String>::new();
-
     // Create the watchdog system with default configuration
-    let watchdog: Watchdog<String, SimpleSubscriptionCriteria, FetchedDataStorage<String>> =
-        Watchdog::with_defaults(storage);
+    let watchdog: Watchdog<String, SimpleSubscriptionCriteria> = Watchdog::with_defaults();
 
     // Start the watchdog system
     println!("Starting watchdog system...");

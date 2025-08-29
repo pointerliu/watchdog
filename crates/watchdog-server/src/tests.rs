@@ -1,15 +1,6 @@
-//! Watchdog API Server
-//!
-//! This crate provides a REST API server for the Watchdog subscription system,
-//! following a clean architecture pattern with Actix-web.
-
-pub mod app;
-pub mod common;
-pub mod domains;
-
 #[cfg(test)]
-mod tests {
-    use actix_web::{test, App, http::StatusCode};
+mod integration_tests {
+    use actix_web::{test, web, App, http::StatusCode};
     use serde_json::json;
     
     use crate::app::app_config;

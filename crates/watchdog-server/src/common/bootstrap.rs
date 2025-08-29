@@ -4,6 +4,8 @@
 //! and wiring them together.
 
 use actix_web::web::Data;
+use std::fmt::Debug;
+use std::hash::Hash;
 use std::sync::Arc;
 use tracing::info;
 
@@ -42,10 +44,16 @@ impl SubscriptionCriteria for SimpleSubscriptionCriteria {
 }
 
 /// Bootstrap the application by creating and wiring all components
-pub async fn bootstrap_app() -> Data<AppState<String, SimpleSubscriptionCriteria>> {
+pub async fn bootstrap_app<T, C>() -> Data<AppState<T, C>>
+where
+    T: Clone + Send + Sync + Debug + 'static + Unpin,
+    C: SubscriptionCriteria<Content = T> + Send + Sync + Clone + Debug + 'static + Unpin,
+    C::Id: Send + Sync + Hash + Eq + Clone + Debug + 'static,
+    <C as SubscriptionCriteria>::Id: Unpin,
+{
     info!("Bootstrapping application");
     // Create the watchdog system with default configuration
-    let watchdog: Watchdog<String, SimpleSubscriptionCriteria> = Watchdog::with_defaults();
+    let watchdog: Watchdog<T, C> = Watchdog::with_defaults();
 
     // Start the watchdog system
     match watchdog.start() {

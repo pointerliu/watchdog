@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/watchdog-core",
     "crates/watchdog-server",
+    "crates/watchdog-service",
 ]
 
 [workspace.package]

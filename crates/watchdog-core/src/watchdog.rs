@@ -117,6 +117,16 @@ where
         Ok(())
     }
 
+    /// Remove a notifier for a specific user
+    pub async fn remove_notifier(
+        &self,
+        user_id: &str,
+        notifier_name: &str,
+    ) -> Result<(), FrameworkError> {
+        self.notifier_manager.remove_notifier(user_id, notifier_name).await;
+        Ok(())
+    }
+
     pub async fn get_user_notifiers(&self, user_id: &str) -> Result<Vec<String>, FrameworkError> {
         let res = self.notifier_manager.get_user_notifiers(user_id).await;
         Ok(res)

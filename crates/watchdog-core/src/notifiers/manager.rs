@@ -63,11 +63,11 @@ where
     }
 
     /// Remove a specific notifier for a user by name
-    pub async fn remove_notifier(&self, user_id: String, notifier_name: String) {
+    pub async fn remove_notifier(&self, user_id: &str, notifier_name: &str) {
         self.actor_address
             .send(RemoveNotifier {
-                user_id,
-                notifier_name,
+                user_id: user_id.to_string(),
+                notifier_name: notifier_name.to_string(),
             })
             .await
             .unwrap_or_else(|e| {

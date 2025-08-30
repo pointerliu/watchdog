@@ -142,20 +142,29 @@ pub struct RemoveNotifierRequest {
 
 /// Remove a notifier by name
 pub async fn remove_notifier(
-    _data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
+    data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
     path: web::Path<RemoveNotifierRequest>,
 ) -> impl Responder {
     let req = path.into_inner();
     info!(
-        "Removing notifier {} for user {}",
+        "Removing fetcher {} for user {}",
         req.notifier_name, req.user_id
     );
 
-    // Currently the watchdog-core doesn't have a remove_notifier method
-    // We'll return a success response for now
-    let response: ApiResponse<()> = ApiResponse::success_with_message(format!(
-        "Notifier '{}' removal requested",
-        req.notifier_name
-    ));
-    HttpResponse::Ok().json(response)
+    match data
+        .watchdog
+        .remove_notifier(&req.user_id, &req.notifier_name)
+        .await
+    {
+        Ok(_) => {
+            let response: ApiResponse<()> =
+                ApiResponse::success_with_message("Notifier removed successfully".to_string());
+            HttpResponse::Ok().json(response)
+        }
+        Err(e) => {
+            let response: ApiResponse<()> =
+                ApiResponse::error(500, format!("Failed to remove notifier: {}", e));
+            HttpResponse::InternalServerError().json(response)
+        }
+    }
 }

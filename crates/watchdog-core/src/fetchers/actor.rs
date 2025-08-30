@@ -26,6 +26,13 @@ pub struct RemoveFetcher {
     pub name: String,
 }
 
+/// Message to get all fetcher names info of a user
+#[derive(Message)]
+#[rtype(result = "Vec<String>")]
+pub struct GetUserFetchers {
+    pub user_id: String,
+}
+
 /// Message to start the fetch cycle
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -138,6 +145,25 @@ where
         });
 
         MessageResult(Some(()))
+    }
+}
+
+impl<T> Handler<GetUserFetchers> for FetcherActor<T>
+where
+    T: Clone + Send + Sync + 'static,
+{
+    type Result = MessageResult<GetUserFetchers>;
+
+    fn handle(&mut self, msg: GetUserFetchers, _ctx: &mut Self::Context) -> Self::Result {
+        let user_id = msg.user_id;
+
+        let res = self
+            .user_fetcher_mapping
+            .get(&user_id)
+            .map(|fetcher_name| fetcher_name.value().iter().cloned().collect::<Vec<_>>())
+            .unwrap_or(vec![]);
+
+        MessageResult(res)
     }
 }
 

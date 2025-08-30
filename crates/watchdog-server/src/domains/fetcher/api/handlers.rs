@@ -22,6 +22,26 @@ pub async fn get_fetcher_types(
     HttpResponse::Ok().json(response)
 }
 
+pub async fn get_user_fetchers(
+    data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
+    path: web::Path<String>,
+) -> impl Responder {
+    let user_id = path.into_inner();
+    info!("Getting fetchers for user {}", user_id);
+
+    match data.watchdog.get_user_fetchers(&user_id).await {
+        Ok(fetcher_names) => {
+            let response: ApiResponse<_> = ApiResponse::success(fetcher_names);
+            HttpResponse::Ok().json(response)
+        }
+        Err(e) => {
+            let response: ApiResponse<()> =
+                ApiResponse::error(500, format!("Failed to add fetcher: {}", e));
+            HttpResponse::InternalServerError().json(response)
+        }
+    }
+}
+
 /// Add a new fetcher
 pub async fn add_fetcher(
     data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,

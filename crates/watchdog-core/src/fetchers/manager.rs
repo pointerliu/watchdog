@@ -1,5 +1,5 @@
 use crate::fetchers::actor::{
-    AddFetcher, RemoveFetcher, SetSender, StartFetchCycle, StopFetchCycle,
+    AddFetcher, GetUserFetchers, RemoveFetcher, SetSender, StartFetchCycle, StopFetchCycle,
 };
 use crate::fetchers::FetcherActor;
 use crate::{FetchResult, Fetcher, Manager};
@@ -54,6 +54,22 @@ impl<T: Clone + Send + Sync + 'static> FetcherManager<T> {
             .unwrap_or_else(|e| {
                 error!("Failed to remove fetcher: {}", e);
                 None
+            });
+
+        result
+    }
+
+    /// Get all fetcher of user
+    pub async fn get_user_fetchers(&self, user_id: &str) -> Vec<String> {
+        let result = self
+            .actor_address
+            .send(GetUserFetchers {
+                user_id: user_id.to_string(),
+            })
+            .await
+            .unwrap_or_else(|e| {
+                error!("Failed to get user fetchers: {}", e);
+                vec![]
             });
 
         result

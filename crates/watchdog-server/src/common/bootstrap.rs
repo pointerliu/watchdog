@@ -9,7 +9,6 @@ use tracing::info;
 
 use crate::common::app_state::AppState;
 use watchdog_core::Watchdog;
-use watchdog_service::arxiv::fetcher::ArxivFetcher;
 use watchdog_service::arxiv::model::ArxivPaper;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
 

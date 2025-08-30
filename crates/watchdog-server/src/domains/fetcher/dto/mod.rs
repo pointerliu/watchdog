@@ -14,6 +14,7 @@ pub struct AddFetcherRequest {
     pub user_id: String,
     pub fetcher_name: String,
     pub fetcher_type: String,
+    pub subscription_id: String,
 }
 
 /// Request to remove a fetcher

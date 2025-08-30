@@ -8,6 +8,7 @@ use crate::common::dto::ApiResponse;
 use crate::common::utils::check_duplicate_name;
 use crate::domains::fetcher::dto::{AddFetcherRequest, RemoveFetcherRequest};
 use watchdog_service::arxiv::criteria::ArxivCriteria;
+use watchdog_service::arxiv::fetcher::{ArxivFetcher, ArxivFetcherBuilder};
 use watchdog_service::arxiv::model::ArxivPaper;
 
 /// Get available fetcher types
@@ -63,7 +64,9 @@ pub async fn add_fetcher(
     // Check if fetcher with the same name already exists
     match data.watchdog.get_user_fetchers(&req.user_id).await {
         Ok(existing_fetchers) => {
-            if let Some(response) = check_duplicate_name(&existing_fetchers, &req.fetcher_name, "Fetcher") {
+            if let Some(response) =
+                check_duplicate_name(&existing_fetchers, &req.fetcher_name, "Fetcher")
+            {
                 return response;
             }
         }
@@ -74,8 +77,34 @@ pub async fn add_fetcher(
         }
     }
 
-    // Create a default ArxivFetcher
-    let fetcher = watchdog_service::arxiv::fetcher::ArxivFetcher::default();
+    // Check if subscription has been registered.
+    let registered_subscription = {
+        if data
+            .watchdog
+            .get_user_subscriptions(&req.user_id)
+            .await
+            .contains(&req.subscription_id)
+        {
+            data.watchdog
+                .get_subscription_by_id(&req.subscription_id)
+                .await
+        } else {
+            None
+        }
+    };
+
+    if registered_subscription.is_none() {
+        let response: ApiResponse<()> = ApiResponse::error(
+            500,
+            format!("Subscription ID: {} not exists", &req.subscription_id),
+        );
+        return HttpResponse::InternalServerError().json(response);
+    }
+
+    let registered_subscription = registered_subscription.unwrap();
+
+    let query = registered_subscription.criteria.keywords.join(" ");
+    let fetcher = ArxivFetcherBuilder::default().query(query).build().unwrap();
 
     match data
         .watchdog

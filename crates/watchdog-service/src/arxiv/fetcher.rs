@@ -18,7 +18,7 @@ impl Default for ArxivFetcher {
     fn default() -> Self {
         Self {
             query: "default query of fetcher".to_string(),
-            number: 5,
+            number: 1,
         }
     }
 }

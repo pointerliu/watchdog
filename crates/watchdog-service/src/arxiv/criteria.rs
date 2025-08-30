@@ -5,8 +5,8 @@ use watchdog_core::SubscriptionCriteria;
 /// Subscription criteria for arXiv papers
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct ArxivCriteria {
-    id: String,
-    keywords: Vec<String>,
+    pub id: String,
+    pub keywords: Vec<String>,
 }
 
 impl ArxivCriteria {

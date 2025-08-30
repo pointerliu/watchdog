@@ -173,6 +173,17 @@ where
         res
     }
 
+    /// Get subscriptions by subscription_id
+    pub async fn get_subscription_by_id(&self, subscription_id: &C::Id) -> Option<Subscription<C>> {
+        let res = self
+            .subscription_manager
+            .read()
+            .await
+            .get_subscription(subscription_id.clone())
+            .await;
+        res
+    }
+
     /// Start the watchdog system
     pub fn start(&self) -> Result<(), FrameworkError> {
         // Start fetcher manager

@@ -5,6 +5,55 @@ const API_BASE_URL = ''; // Use same origin (proxy through Express server)
 const endpointItems = document.querySelectorAll('.endpoint-item');
 const endpointDetails = document.querySelectorAll('.endpoint-details');
 
+// Custom Modal Elements
+const modal = document.getElementById('custom-modal');
+const modalMessage = document.getElementById('modal-message');
+const closeModalBtn = document.querySelector('.close-modal');
+const modalOkBtn = document.getElementById('modal-ok-btn');
+
+// Show custom modal
+function showModal(message) {
+    modalMessage.textContent = message;
+    modal.style.display = 'block';
+    modal.style.animation = 'fadeIn 0.3s ease';
+}
+
+// Close modal
+function closeModal() {
+    modal.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+}
+
+// Add animation to response box
+function animateResponseBox(element) {
+    element.classList.remove('updated');
+    void element.offsetWidth; // Trigger reflow
+    element.classList.add('updated');
+}
+
+// Event Listeners for modal
+closeModalBtn.addEventListener('click', closeModal);
+modalOkBtn.addEventListener('click', closeModal);
+
+// Close modal when clicking outside
+window.addEventListener('click', (event) => {
+    if (event.target === modal) {
+        closeModal();
+    }
+});
+
+// Add fadeOut animation to CSS dynamically
+const style = document.createElement('style');
+style.innerHTML = `
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
 // Event Listeners for endpoint navigation
 endpointItems.forEach(item => {
     item.addEventListener('click', () => {
@@ -14,11 +63,14 @@ endpointItems.forEach(item => {
         endpointItems.forEach(i => i.classList.remove('active'));
         item.classList.add('active');
         
-        // Show the selected endpoint details
+        // Show the selected endpoint details with animation
         endpointDetails.forEach(detail => {
             detail.classList.remove('active');
             if (detail.id === `${endpoint}-details`) {
-                detail.classList.add('active');
+                // Add a slight delay for smoother transition
+                setTimeout(() => {
+                    detail.classList.add('active');
+                }, 50);
             }
         });
     });
@@ -26,6 +78,10 @@ endpointItems.forEach(item => {
 
 // Health Check
 document.getElementById('health-check-btn').addEventListener('click', async () => {
+    const button = document.getElementById('health-check-btn');
+    const responseBox = document.getElementById('health-response');
+    button.classList.add('btn-loading');
+    
     try {
         const response = await fetch(`${API_BASE_URL}/health`, {
             method: 'GET'
@@ -47,17 +103,26 @@ document.getElementById('health-check-btn').addEventListener('click', async () =
             throw new Error(`Expected JSON but received: ${text.substring(0, 100)}...`);
         }
         
-        document.getElementById('health-response').textContent = JSON.stringify(data, null, 2);
+        responseBox.textContent = JSON.stringify(data, null, 2);
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('health-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
 // Subscriptions
 document.getElementById('get-subscriptions-btn').addEventListener('click', async () => {
     const userId = document.getElementById('get-user-id').value;
+    const button = document.getElementById('get-subscriptions-btn');
+    const responseBox = document.getElementById('subscriptions-response');
+    button.classList.add('btn-loading');
+    
     if (!userId) {
-        alert('Please enter a user ID');
+        showModal('Please enter a user ID');
+        button.classList.remove('btn-loading');
         return;
     }
     
@@ -68,7 +133,8 @@ document.getElementById('get-subscriptions-btn').addEventListener('click', async
         
         // Handle case where user has no subscriptions (404)
         if (response.status === 404) {
-            document.getElementById('subscriptions-response').textContent = "No subscriptions found for this user.";
+            responseBox.textContent = "No subscriptions found for this user.";
+            animateResponseBox(responseBox);
             return;
         }
         
@@ -80,7 +146,8 @@ document.getElementById('get-subscriptions-btn').addEventListener('click', async
         // Handle empty response
         const text = await response.text();
         if (!text) {
-            document.getElementById('subscriptions-response').textContent = "No subscriptions found for this user.";
+            responseBox.textContent = "No subscriptions found for this user.";
+            animateResponseBox(responseBox);
             return;
         }
         
@@ -88,12 +155,16 @@ document.getElementById('get-subscriptions-btn').addEventListener('click', async
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = JSON.parse(text);
-            document.getElementById('subscriptions-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
-            document.getElementById('subscriptions-response').textContent = `Expected JSON but received: ${text.substring(0, 100)}...`;
+            responseBox.textContent = `Expected JSON but received: ${text.substring(0, 100)}...`;
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('subscriptions-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
@@ -101,9 +172,13 @@ document.getElementById('create-subscription-btn').addEventListener('click', asy
     const userId = document.getElementById('create-user-id').value;
     const subscriptionId = document.getElementById('subscription-id').value;
     const keywordsInput = document.getElementById('keywords').value;
+    const button = document.getElementById('create-subscription-btn');
+    const responseBox = document.getElementById('subscriptions-response');
+    button.classList.add('btn-loading');
     
     if (!userId || !subscriptionId) {
-        alert('Please enter both User ID and Subscription ID');
+        showModal('Please enter both User ID and Subscription ID');
+        button.classList.remove('btn-loading');
         return;
     }
     
@@ -133,22 +208,30 @@ document.getElementById('create-subscription-btn').addEventListener('click', asy
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            document.getElementById('subscriptions-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
             const text = await response.text();
-            document.getElementById('subscriptions-response').textContent = text || "Subscription created successfully.";
+            responseBox.textContent = text || "Subscription created successfully.";
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('subscriptions-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
 document.getElementById('delete-subscription-btn').addEventListener('click', async () => {
     const userId = document.getElementById('delete-user-id').value;
     const subscriptionId = document.getElementById('delete-subscription-id').value;
+    const button = document.getElementById('delete-subscription-btn');
+    const responseBox = document.getElementById('subscriptions-response');
+    button.classList.add('btn-loading');
     
     if (!userId || !subscriptionId) {
-        alert('Please enter both User ID and Subscription ID');
+        showModal('Please enter both User ID and Subscription ID');
+        button.classList.remove('btn-loading');
         return;
     }
     
@@ -166,18 +249,26 @@ document.getElementById('delete-subscription-btn').addEventListener('click', asy
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            document.getElementById('subscriptions-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
             const text = await response.text();
-            document.getElementById('subscriptions-response').textContent = text || "Subscription deleted successfully.";
+            responseBox.textContent = text || "Subscription deleted successfully.";
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('subscriptions-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
 // Fetchers
 document.getElementById('get-fetcher-types-btn').addEventListener('click', async () => {
+    const button = document.getElementById('get-fetcher-types-btn');
+    const responseBox = document.getElementById('fetchers-response');
+    button.classList.add('btn-loading');
+    
     try {
         const response = await fetch(`${API_BASE_URL}/api/v1/fetchers/types`, {
             method: 'GET'
@@ -192,20 +283,29 @@ document.getElementById('get-fetcher-types-btn').addEventListener('click', async
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
             const text = await response.text();
-            document.getElementById('fetchers-response').textContent = text || "No fetcher types found.";
+            responseBox.textContent = text || "No fetcher types found.";
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('fetchers-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
 document.getElementById('get-fetchers-btn').addEventListener('click', async () => {
     const userId = document.getElementById('get-fetchers-user-id').value;
+    const button = document.getElementById('get-fetchers-btn');
+    const responseBox = document.getElementById('fetchers-response');
+    button.classList.add('btn-loading');
+    
     if (!userId) {
-        alert('Please enter a user ID');
+        showModal('Please enter a user ID');
+        button.classList.remove('btn-loading');
         return;
     }
     
@@ -216,7 +316,8 @@ document.getElementById('get-fetchers-btn').addEventListener('click', async () =
         
         // Handle case where user has no fetchers (404)
         if (response.status === 404) {
-            document.getElementById('fetchers-response').textContent = "No fetchers found for this user.";
+            responseBox.textContent = "No fetchers found for this user.";
+            animateResponseBox(responseBox);
             return;
         }
         
@@ -228,7 +329,8 @@ document.getElementById('get-fetchers-btn').addEventListener('click', async () =
         // Handle empty response
         const text = await response.text();
         if (!text) {
-            document.getElementById('fetchers-response').textContent = "No fetchers found for this user.";
+            responseBox.textContent = "No fetchers found for this user.";
+            animateResponseBox(responseBox);
             return;
         }
         
@@ -236,12 +338,16 @@ document.getElementById('get-fetchers-btn').addEventListener('click', async () =
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = JSON.parse(text);
-            document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
-            document.getElementById('fetchers-response').textContent = `Expected JSON but received: ${text.substring(0, 100)}...`;
+            responseBox.textContent = `Expected JSON but received: ${text.substring(0, 100)}...`;
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('fetchers-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
@@ -250,9 +356,13 @@ document.getElementById('add-fetcher-btn').addEventListener('click', async () =>
     const fetcherName = document.getElementById('fetcher-name').value;
     const fetcherType = document.getElementById('fetcher-type').value;
     const subscriptionId = document.getElementById('fetcher-subscription-id').value;
+    const button = document.getElementById('add-fetcher-btn');
+    const responseBox = document.getElementById('fetchers-response');
+    button.classList.add('btn-loading');
     
     if (!userId || !fetcherName || !fetcherType || !subscriptionId) {
-        alert('Please fill in all fields');
+        showModal('Please fill in all fields');
+        button.classList.remove('btn-loading');
         return;
     }
     
@@ -281,22 +391,30 @@ document.getElementById('add-fetcher-btn').addEventListener('click', async () =>
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
             const text = await response.text();
-            document.getElementById('fetchers-response').textContent = text || "Fetcher added successfully.";
+            responseBox.textContent = text || "Fetcher added successfully.";
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('fetchers-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
 document.getElementById('delete-fetcher-btn').addEventListener('click', async () => {
     const userId = document.getElementById('delete-fetcher-user-id').value;
     const fetcherName = document.getElementById('fetcher-name-delete').value;
+    const button = document.getElementById('delete-fetcher-btn');
+    const responseBox = document.getElementById('fetchers-response');
+    button.classList.add('btn-loading');
     
     if (!userId || !fetcherName) {
-        alert('Please enter both User ID and Fetcher Name');
+        showModal('Please enter both User ID and Fetcher Name');
+        button.classList.remove('btn-loading');
         return;
     }
     
@@ -314,13 +432,17 @@ document.getElementById('delete-fetcher-btn').addEventListener('click', async ()
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
             const text = await response.text();
-            document.getElementById('fetchers-response').textContent = text || "Fetcher deleted successfully.";
+            responseBox.textContent = text || "Fetcher deleted successfully.";
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('fetchers-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
@@ -330,12 +452,20 @@ document.getElementById('notifier-type').addEventListener('change', function() {
     const emailField = document.getElementById('email-field');
     if (this.value === 'ArxivEmailNotifier') {
         emailField.style.display = 'block';
+        emailField.style.animation = 'fadeIn 0.3s ease';
     } else {
-        emailField.style.display = 'none';
+        emailField.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+            emailField.style.display = 'none';
+        }, 300);
     }
 });
 
 document.getElementById('get-notifier-types-btn').addEventListener('click', async () => {
+    const button = document.getElementById('get-notifier-types-btn');
+    const responseBox = document.getElementById('notifiers-response');
+    button.classList.add('btn-loading');
+    
     try {
         const response = await fetch(`${API_BASE_URL}/api/v1/notifiers/types`, {
             method: 'GET'
@@ -350,20 +480,29 @@ document.getElementById('get-notifier-types-btn').addEventListener('click', asyn
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
             const text = await response.text();
-            document.getElementById('notifiers-response').textContent = text || "No notifier types found.";
+            responseBox.textContent = text || "No notifier types found.";
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('notifiers-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
 document.getElementById('get-notifiers-btn').addEventListener('click', async () => {
     const userId = document.getElementById('get-notifiers-user-id').value;
+    const button = document.getElementById('get-notifiers-btn');
+    const responseBox = document.getElementById('notifiers-response');
+    button.classList.add('btn-loading');
+    
     if (!userId) {
-        alert('Please enter a user ID');
+        showModal('Please enter a user ID');
+        button.classList.remove('btn-loading');
         return;
     }
     
@@ -374,7 +513,8 @@ document.getElementById('get-notifiers-btn').addEventListener('click', async () 
         
         // Handle case where user has no notifiers (404)
         if (response.status === 404) {
-            document.getElementById('notifiers-response').textContent = "No notifiers found for this user.";
+            responseBox.textContent = "No notifiers found for this user.";
+            animateResponseBox(responseBox);
             return;
         }
         
@@ -386,7 +526,8 @@ document.getElementById('get-notifiers-btn').addEventListener('click', async () 
         // Handle empty response
         const text = await response.text();
         if (!text) {
-            document.getElementById('notifiers-response').textContent = "No notifiers found for this user.";
+            responseBox.textContent = "No notifiers found for this user.";
+            animateResponseBox(responseBox);
             return;
         }
         
@@ -394,12 +535,16 @@ document.getElementById('get-notifiers-btn').addEventListener('click', async () 
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = JSON.parse(text);
-            document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
-            document.getElementById('notifiers-response').textContent = `Expected JSON but received: ${text.substring(0, 100)}...`;
+            responseBox.textContent = `Expected JSON but received: ${text.substring(0, 100)}...`;
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('notifiers-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
@@ -408,9 +553,13 @@ document.getElementById('add-notifier-btn').addEventListener('click', async () =
     const notifierName = document.getElementById('notifier-name').value;
     const notifierType = document.getElementById('notifier-type').value;
     const emailAddress = document.getElementById('email-address').value;
+    const button = document.getElementById('add-notifier-btn');
+    const responseBox = document.getElementById('notifiers-response');
+    button.classList.add('btn-loading');
     
     if (!userId || !notifierName || !notifierType) {
-        alert('Please fill in all required fields');
+        showModal('Please fill in all required fields');
+        button.classList.remove('btn-loading');
         return;
     }
     
@@ -423,7 +572,8 @@ document.getElementById('add-notifier-btn').addEventListener('click', async () =
     // Add email address if it's an email notifier
     if (notifierType === 'ArxivEmailNotifier') {
         if (!emailAddress) {
-            alert('Please enter an email address for email notifier');
+            showModal('Please enter an email address for email notifier');
+            button.classList.remove('btn-loading');
             return;
         }
         requestBody.email_address = emailAddress;
@@ -447,22 +597,30 @@ document.getElementById('add-notifier-btn').addEventListener('click', async () =
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
             const text = await response.text();
-            document.getElementById('notifiers-response').textContent = text || "Notifier added successfully.";
+            responseBox.textContent = text || "Notifier added successfully.";
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('notifiers-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
 
 document.getElementById('delete-notifier-btn').addEventListener('click', async () => {
     const userId = document.getElementById('delete-notifier-user-id').value;
     const notifierName = document.getElementById('notifier-name-delete').value;
+    const button = document.getElementById('delete-notifier-btn');
+    const responseBox = document.getElementById('notifiers-response');
+    button.classList.add('btn-loading');
     
     if (!userId || !notifierName) {
-        alert('Please enter both User ID and Notifier Name');
+        showModal('Please enter both User ID and Notifier Name');
+        button.classList.remove('btn-loading');
         return;
     }
     
@@ -480,12 +638,51 @@ document.getElementById('delete-notifier-btn').addEventListener('click', async (
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+            responseBox.textContent = JSON.stringify(data, null, 2);
         } else {
             const text = await response.text();
-            document.getElementById('notifiers-response').textContent = text || "Notifier deleted successfully.";
+            responseBox.textContent = text || "Notifier deleted successfully.";
         }
+        animateResponseBox(responseBox);
     } catch (error) {
-        document.getElementById('notifiers-response').textContent = `Error: ${error.message}`;
+        responseBox.textContent = `Error: ${error.message}`;
+        animateResponseBox(responseBox);
+    } finally {
+        button.classList.remove('btn-loading');
     }
 });
+
+// Add loading animation to CSS dynamically
+const loadingStyle = document.createElement('style');
+loadingStyle.innerHTML = `
+    .btn-loading {
+        position: relative;
+        pointer-events: none;
+        color: transparent !important;
+    }
+    
+    .btn-loading::after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 50%;
+        left: 50%;
+        margin-top: -8px;
+        margin-left: -8px;
+        border: 2px solid transparent;
+        border-top-color: #ffffff;
+        border-radius: 50%;
+        animation: btnLoadingSpinner 0.8s ease infinite;
+    }
+    
+    @keyframes btnLoadingSpinner {
+        from {
+            transform: rotate(0turn);
+        }
+        to {
+            transform: rotate(1turn);
+        }
+    }
+`;
+document.head.appendChild(loadingStyle);

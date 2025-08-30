@@ -17,6 +17,7 @@
   --macos-control-close: #FF5F56;
   --macos-control-minimize: #FFBD2E;
   --macos-control-maximize: #27C93F;
+  --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -42,9 +43,15 @@ body {
   background-color: var(--macos-background);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px var(--shadow-color);
   display: flex;
   flex-direction: column;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .title-bar {
@@ -101,6 +108,7 @@ body {
   border-right: 1px solid var(--macos-border);
   padding: 20px 0;
   overflow-y: auto;
+  transition: all 0.3s ease;
 }
 
 .sidebar-header {
@@ -127,22 +135,30 @@ body {
   cursor: pointer;
   color: var(--macos-text);
   font-size: 14px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  transform: translateX(0);
 }
 
 .endpoint-item:hover {
   background-color: rgba(0, 0, 0, 0.05);
+  transform: translateX(5px);
 }
 
 .endpoint-item.active {
   background-color: rgba(0, 122, 255, 0.1);
   color: var(--macos-blue);
   border-left: 3px solid var(--macos-blue);
+  transform: translateX(5px);
 }
 
 .endpoint-item i {
   width: 20px;
   text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.endpoint-item:hover i {
+  transform: scale(1.2);
 }
 
 .main-content {
@@ -153,6 +169,12 @@ body {
 
 .endpoint-details {
   display: none;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .endpoint-details.active {
@@ -175,6 +197,13 @@ body {
   border-radius: 10px;
   padding: 20px;
   margin-bottom: 20px;
+  box-shadow: 0 2px 5px var(--shadow-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-section:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px var(--shadow-color);
 }
 
 .form-section h3 {
@@ -204,6 +233,7 @@ body {
   background-color: var(--macos-background);
   font-size: 14px;
   color: var(--macos-text);
+  transition: all 0.2s ease;
 }
 
 .form-group input:focus,
@@ -211,6 +241,7 @@ body {
   outline: none;
   border-color: var(--macos-blue);
   box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+  transform: scale(1.01);
 }
 
 .btn {
@@ -220,7 +251,9 @@ body {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn.primary {
@@ -230,6 +263,8 @@ body {
 
 .btn.primary:hover {
   background-color: var(--macos-blue-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--shadow-color);
 }
 
 .btn.danger {
@@ -239,10 +274,46 @@ body {
 
 .btn.danger:hover {
   background-color: #ff453a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.btn:focus:not(:active)::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(50, 50);
+    opacity: 0;
+  }
 }
 
 .response-container {
   margin-top: 30px;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 .response-container h3 {
@@ -261,6 +332,114 @@ body {
   white-space: pre-wrap;
   max-height: 300px;
   overflow-y: auto;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.response-box:hover {
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.response-box::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.response-box.updated {
+  animation: contentUpdate 0.5s ease;
+}
+
+@keyframes contentUpdate {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background-color: var(--macos-background);
+  margin: 15% auto;
+  padding: 0;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes modalSlideIn {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  background-color: var(--macos-gray);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--macos-border);
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--macos-text);
+}
+
+.close-modal {
+  color: var(--macos-text-light);
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-modal:hover {
+  color: var(--macos-text);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-body p {
+  color: var(--macos-text);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  background-color: var(--macos-gray);
+  border-top: 1px solid var(--macos-border);
+  text-align: right;
 }
 
 /* Responsive design */
@@ -277,5 +456,10 @@ body {
   
   .main-content {
     padding: 20px;
+  }
+  
+  .modal-content {
+    width: 90%;
+    margin: 20% auto;
   }
 }

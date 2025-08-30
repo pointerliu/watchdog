@@ -85,6 +85,7 @@ where
     /// Add a fetcher to the system
     pub async fn add_fetcher(
         &self,
+        user_id: String,
         name: String,
         fetcher: Box<dyn Fetcher<T> + Send + Sync>,
     ) -> Result<(), FrameworkError> {

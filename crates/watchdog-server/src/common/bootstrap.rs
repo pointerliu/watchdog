@@ -20,10 +20,10 @@ pub async fn bootstrap_app() -> Data<AppState<ArxivPaper, ArxivCriteria>> {
     let watchdog: Watchdog<ArxivPaper, ArxivCriteria> = Watchdog::with_defaults();
 
     // Add default fetcher
-    let arxiv_fetcher = ArxivFetcher::default();
-    if let Err(e) = watchdog.add_fetcher("default_arxiv".to_string(), Box::new(arxiv_fetcher)).await {
-        panic!("Failed to add default fetcher: {}", e);
-    }
+    // let arxiv_fetcher = ArxivFetcher::default();
+    // if let Err(e) = watchdog.add_fetcher("default_arxiv".to_string(), Box::new(arxiv_fetcher)).await {
+    //     panic!("Failed to add default fetcher: {}", e);
+    // }
 
     // Start the watchdog system
     match watchdog.start() {

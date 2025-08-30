@@ -6,7 +6,7 @@ use tracing::info;
 
 use crate::common::app_state::AppState;
 use crate::common::dto::ApiResponse;
-use crate::domains::fetcher::dto::AddFetcherRequest;
+use crate::domains::fetcher::dto::{AddFetcherRequest, RemoveFetcherRequest};
 use watchdog_service::arxiv::criteria::ArxivCriteria;
 use watchdog_service::arxiv::model::ArxivPaper;
 
@@ -79,12 +79,6 @@ pub async fn add_fetcher(
             HttpResponse::InternalServerError().json(response)
         }
     }
-}
-
-#[derive(Deserialize)]
-pub struct RemoveFetcherRequest {
-    pub user_id: String,
-    pub fetcher_name: String,
 }
 
 /// Remove a fetcher by name

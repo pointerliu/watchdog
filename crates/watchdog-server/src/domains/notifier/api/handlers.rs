@@ -29,8 +29,8 @@ pub async fn get_notifier_types(
     HttpResponse::Ok().json(response)
 }
 
-/// Get user's current notifier
-pub async fn get_user_notifier(
+/// Get user's current notifiers
+pub async fn get_user_notifiers(
     _data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
     path: web::Path<String>,
 ) -> impl Responder {

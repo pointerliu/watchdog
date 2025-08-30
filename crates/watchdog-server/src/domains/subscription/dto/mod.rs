@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 pub struct CreateSubscriptionRequest {
     pub user_id: String,
     pub subscription_id: String,
+    // TODO: fix me, keywords is not generic.
     pub keywords: Vec<String>,
 }
 

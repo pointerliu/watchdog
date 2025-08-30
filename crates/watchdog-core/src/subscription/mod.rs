@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::hash::Hash;
 
 pub mod actor;
@@ -10,7 +11,7 @@ pub use manager::SubscriptionManager;
 /// Implementors can define their own logic for matching content.
 pub trait SubscriptionCriteria: Clone {
     /// The type of the unique identifier for this criteria
-    type Id: Clone + Eq + Hash;
+    type Id: Clone + Eq + Hash + Display;
 
     /// The type of content that this criteria can match against
     type Content;

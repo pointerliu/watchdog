@@ -1,11 +1,12 @@
 use crate::subscription::actor::{
     AddSubscription, GetAllSubscriptions, GetMatchingSubscriptions, GetSubscription,
-    RemoveSubscription,
+    GetUserSubscription, RemoveSubscription,
 };
 use crate::subscription::SubscriptionActor;
 use crate::{Subscription, SubscriptionCriteria};
 use actix::prelude::*;
 use std::collections::HashMap;
+use std::marker::PhantomData;
 
 /// Manages a collection of subscriptions
 #[derive(Debug)]
@@ -41,13 +42,28 @@ where
     }
 
     /// Remove a subscription by its criteria ID
-    pub async fn remove_subscription(&self, id: C::Id) -> Option<Subscription<C>> {
+    pub async fn remove_subscription(&self, user_id: &str, id: &C::Id) {
         self.actor_address
-            .send(RemoveSubscription { id })
+            .send(RemoveSubscription {
+                user_id: user_id.to_string(),
+                id: id.clone(),
+            })
             .await
             .unwrap_or_else(|e| {
                 tracing::error!("Failed to remove subscription: {}", e);
-                None
+            })
+    }
+
+    pub async fn get_user_subscriptions(&self, user_id: &str) -> Vec<C::Id> {
+        self.actor_address
+            .send(GetUserSubscription {
+                user_id: user_id.to_string(),
+                _phantom: PhantomData::default(),
+            })
+            .await
+            .unwrap_or_else(|e| {
+                tracing::error!("Failed to get subscription: {}", e);
+                vec![]
             })
     }
 

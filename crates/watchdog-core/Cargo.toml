@@ -25,6 +25,7 @@ lettre = { version = "0.10", features = ["tokio1", "tokio1-native-tls", "smtp-tr
 actix = "0.13"
 futures = "0.3"
 dashmap = "5.0"
+log = "0.4.27"
 
 [dev-dependencies]
 watchdog-service = { path = "../watchdog-service" }

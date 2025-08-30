@@ -13,6 +13,7 @@ use std::hash::Hash;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{mpsc, RwLock};
+use tracing::error;
 
 /// Configuration for the Watchdog system
 #[derive(Debug, Clone)]
@@ -123,7 +124,9 @@ where
         user_id: &str,
         notifier_name: &str,
     ) -> Result<(), FrameworkError> {
-        self.notifier_manager.remove_notifier(user_id, notifier_name).await;
+        self.notifier_manager
+            .remove_notifier(user_id, notifier_name)
+            .await;
         Ok(())
     }
 
@@ -148,15 +151,27 @@ where
     /// Remove a subscription from the system
     pub async fn remove_subscription(
         &self,
+        user_id: &str,
         criteria_id: &C::Id,
-    ) -> Result<Option<Subscription<C>>, FrameworkError> {
+    ) -> Result<(), FrameworkError> {
         let result = self
             .subscription_manager
             .write()
             .await
-            .remove_subscription(criteria_id.clone())
+            .remove_subscription(user_id, criteria_id)
             .await;
         Ok(result)
+    }
+
+    /// Get all subscriptions of user
+    pub async fn get_user_subscriptions(&self, user_id: &str) -> Vec<C::Id> {
+        let res = self
+            .subscription_manager
+            .read()
+            .await
+            .get_user_subscriptions(user_id)
+            .await;
+        res
     }
 
     /// Start the watchdog system

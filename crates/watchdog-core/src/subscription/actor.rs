@@ -1,6 +1,9 @@
 use crate::{Subscription, SubscriptionCriteria};
 use actix::prelude::*;
+use log::debug;
 use std::collections::HashMap;
+use std::fmt::Debug;
+use std::marker::PhantomData;
 
 /// Message to add a subscription
 #[derive(Message)]
@@ -16,14 +19,28 @@ where
 
 /// Message to remove a subscription
 #[derive(Message)]
-#[rtype(result = "Option<Subscription<C>>")]
+#[rtype(result = "()")]
 pub struct RemoveSubscription<C: SubscriptionCriteria + 'static>
 where
     C::Id: Unpin + Send + Sync + 'static,
     C::Content: Unpin + Send + Sync + 'static,
     C: Unpin + Send + Sync + 'static,
 {
+    pub user_id: String,
     pub id: C::Id,
+}
+
+/// Message to get all subscriptions of a user
+#[derive(Message)]
+#[rtype(result = "Vec<C::Id>")]
+pub struct GetUserSubscription<C: SubscriptionCriteria + 'static>
+where
+    C::Id: Unpin + Send + Sync + 'static,
+    C::Content: Unpin + Send + Sync + 'static,
+    C: Unpin + Send + Sync + 'static,
+{
+    pub user_id: String,
+    pub(crate) _phantom: PhantomData<C>,
 }
 
 /// Message to get a subscription
@@ -152,7 +169,35 @@ where
     type Result = MessageResult<RemoveSubscription<C>>;
 
     fn handle(&mut self, msg: RemoveSubscription<C>, _ctx: &mut Self::Context) -> Self::Result {
-        MessageResult(self.subscriptions.remove(&msg.id))
+        self.subscriptions
+            .retain(|sub_id, sub| !(sub.user_id == msg.user_id && sub_id == &msg.id));
+        self.subscriptions.remove(&msg.id);
+        MessageResult(())
+    }
+}
+
+impl<C: SubscriptionCriteria + 'static> Handler<GetUserSubscription<C>> for SubscriptionActor<C>
+where
+    C::Id: Unpin + Send + Sync + 'static,
+    C::Content: Unpin + Send + Sync + 'static,
+    C: Unpin + Send + Sync + 'static,
+{
+    type Result = MessageResult<GetUserSubscription<C>>;
+
+    fn handle(&mut self, msg: GetUserSubscription<C>, _ctx: &mut Self::Context) -> Self::Result {
+        let data = self
+            .subscriptions
+            .iter()
+            .filter_map(|(id, sub)| {
+                if sub.user_id == msg.user_id {
+                    Some(id.clone())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
+        MessageResult(data)
     }
 }
 

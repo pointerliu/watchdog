@@ -45,8 +45,9 @@ async fn test_subscription_manager() {
     assert_eq!(retrieved.unwrap().user_id, "test_user");
 
     // Test removal
-    let removed = manager.remove_subscription("test_id".to_string()).await;
-    assert!(removed.is_some());
+    manager
+        .remove_subscription("lzz", &"test_id".to_string())
+        .await;
     assert_eq!(manager.get_subscriptions().await.len(), 0);
 }
 

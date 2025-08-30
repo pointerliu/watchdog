@@ -1,4 +1,7 @@
-use crate::notifiers::actor::{AddNotifier, GetUserNotifiers, NotifierActor, RemoveAllNotifiers, RemoveNotifier, SendContent, StartNotifierCycle, StopNotifierCycle};
+use crate::notifiers::actor::{
+    AddNotifier, GetUserNotifiers, NotifierActor, RemoveAllNotifiers, RemoveNotifier, SendContent,
+    StartNotifierCycle, StopNotifierCycle,
+};
 use crate::{FetchResult, Manager, Notifier, SubscriptionCriteria, SubscriptionManager};
 use actix::prelude::*;
 use std::sync::Arc;
@@ -77,7 +80,9 @@ where
 
     pub async fn get_user_notifiers(&self, user_id: &str) -> Vec<String> {
         self.actor_address
-            .send(GetUserNotifiers { user_id: user_id.to_string() })
+            .send(GetUserNotifiers {
+                user_id: user_id.to_string(),
+            })
             .await
             .unwrap_or_else(|e| {
                 error!("Failed to get user notifiers: {}", e);

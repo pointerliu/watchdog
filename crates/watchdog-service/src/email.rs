@@ -3,8 +3,8 @@ use lettre::{
     transport::smtp::authentication::Credentials,
     AsyncSmtpTransport, AsyncTransport, Tokio1Executor,
 };
-use std::env;
 use log::{debug, trace};
+use std::env;
 
 #[derive(Clone)]
 pub struct EmailService {

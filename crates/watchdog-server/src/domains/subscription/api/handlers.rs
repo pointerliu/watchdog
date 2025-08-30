@@ -8,9 +8,7 @@ use tracing::info;
 
 use crate::common::app_state::AppState;
 use crate::common::dto::ApiResponse;
-use crate::domains::subscription::dto::{
-    CreateSubscriptionRequest, SubscriptionResponse,
-};
+use crate::domains::subscription::dto::{CreateSubscriptionRequest, SubscriptionResponse};
 use watchdog_core::subscription::Subscription;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
 use watchdog_service::arxiv::model::ArxivPaper;

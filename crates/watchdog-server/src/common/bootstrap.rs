@@ -9,8 +9,8 @@ use tracing::info;
 
 use crate::common::app_state::AppState;
 use watchdog_core::Watchdog;
-use watchdog_service::arxiv::model::ArxivPaper;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
+use watchdog_service::arxiv::model::ArxivPaper;
 
 /// Bootstrap the application by creating and wiring all components
 pub async fn bootstrap_app() -> Data<AppState<ArxivPaper, ArxivCriteria>> {

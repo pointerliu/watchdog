@@ -11,5 +11,8 @@ pub fn notifier_routes(cfg: &mut web::ServiceConfig) {
     cfg.route("/notifiers/types", web::get().to(get_notifier_types))
         .route("/notifiers/{user_id}", web::get().to(get_user_notifiers))
         .route("/notifiers", web::post().to(add_notifier))
-        .route("/notifiers/{user_id}/{notifier_name}", web::delete().to(remove_notifier));
+        .route(
+            "/notifiers/{user_id}/{notifier_name}",
+            web::delete().to(remove_notifier),
+        );
 }

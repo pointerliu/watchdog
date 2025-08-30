@@ -21,8 +21,6 @@ pub struct WatchdogConfig {
     pub fetch_interval: Duration,
     /// Number of worker threads for fetchers
     pub fetch_worker_threads: usize,
-    /// Whether to store fetched data
-    pub store_fetched_data: bool,
 }
 
 impl Default for WatchdogConfig {
@@ -30,7 +28,6 @@ impl Default for WatchdogConfig {
         Self {
             fetch_interval: Duration::from_secs(60), // 1 minute default
             fetch_worker_threads: 4,
-            store_fetched_data: true,
         }
     }
 }

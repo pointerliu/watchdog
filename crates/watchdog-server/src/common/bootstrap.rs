@@ -8,15 +8,15 @@ use std::sync::Arc;
 use tracing::info;
 
 use crate::common::app_state::AppState;
-use watchdog_core::Watchdog;
+use watchdog_core::{Watchdog, WatchdogConfig};
 use watchdog_service::arxiv::criteria::ArxivCriteria;
 use watchdog_service::arxiv::model::ArxivPaper;
 
 /// Bootstrap the application by creating and wiring all components
-pub async fn bootstrap_app() -> Data<AppState<ArxivPaper, ArxivCriteria>> {
+pub async fn bootstrap_app(cfg: WatchdogConfig) -> Data<AppState<ArxivPaper, ArxivCriteria>> {
     info!("Bootstrapping application");
     // Create the watchdog system with default configuration
-    let watchdog: Watchdog<ArxivPaper, ArxivCriteria> = Watchdog::with_defaults();
+    let watchdog: Watchdog<ArxivPaper, ArxivCriteria> = Watchdog::new(cfg);
 
     // Start the watchdog system
     match watchdog.start() {

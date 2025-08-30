@@ -4,12 +4,45 @@ const API_BASE_URL = ''; // Use same origin (proxy through Express server)
 // DOM Elements
 const endpointItems = document.querySelectorAll('.endpoint-item');
 const endpointDetails = document.querySelectorAll('.endpoint-details');
+const darkModeToggle = document.getElementById('dark-mode-toggle');
+const darkModeIcon = document.querySelector('#dark-mode-toggle i');
 
 // Custom Modal Elements
 const modal = document.getElementById('custom-modal');
 const modalMessage = document.getElementById('modal-message');
 const closeModalBtn = document.querySelector('.close-modal');
 const modalOkBtn = document.getElementById('modal-ok-btn');
+
+// Check for saved dark mode preference or default to light mode
+function initDarkMode() {
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    if (isDarkMode) {
+        document.documentElement.classList.add('dark-mode');
+        darkModeIcon.classList.remove('fa-moon');
+        darkModeIcon.classList.add('fa-sun');
+    }
+}
+
+// Toggle dark mode
+function toggleDarkMode() {
+    const isDarkMode = document.documentElement.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode);
+    
+    // Update icon
+    if (isDarkMode) {
+        darkModeIcon.classList.remove('fa-moon');
+        darkModeIcon.classList.add('fa-sun');
+    } else {
+        darkModeIcon.classList.remove('fa-sun');
+        darkModeIcon.classList.add('fa-moon');
+    }
+}
+
+// Initialize dark mode on page load
+initDarkMode();
+
+// Add event listener to dark mode toggle button
+darkModeToggle.addEventListener('click', toggleDarkMode);
 
 // Show custom modal
 function showModal(message) {
@@ -44,16 +77,6 @@ window.addEventListener('click', (event) => {
     }
 });
 
-// Add fadeOut animation to CSS dynamically
-const style = document.createElement('style');
-style.innerHTML = `
-    @keyframes fadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
-    }
-`;
-document.head.appendChild(style);
-
 // Event Listeners for endpoint navigation
 endpointItems.forEach(item => {
     item.addEventListener('click', () => {
@@ -63,14 +86,11 @@ endpointItems.forEach(item => {
         endpointItems.forEach(i => i.classList.remove('active'));
         item.classList.add('active');
         
-        // Show the selected endpoint details with animation
+        // Show the selected endpoint details
         endpointDetails.forEach(detail => {
             detail.classList.remove('active');
             if (detail.id === `${endpoint}-details`) {
-                // Add a slight delay for smoother transition
-                setTimeout(() => {
-                    detail.classList.add('active');
-                }, 50);
+                detail.classList.add('active');
             }
         });
     });
@@ -653,36 +673,3 @@ document.getElementById('delete-notifier-btn').addEventListener('click', async (
 });
 
 // Add loading animation to CSS dynamically
-const loadingStyle = document.createElement('style');
-loadingStyle.innerHTML = `
-    .btn-loading {
-        position: relative;
-        pointer-events: none;
-        color: transparent !important;
-    }
-    
-    .btn-loading::after {
-        content: '';
-        position: absolute;
-        width: 16px;
-        height: 16px;
-        top: 50%;
-        left: 50%;
-        margin-top: -8px;
-        margin-left: -8px;
-        border: 2px solid transparent;
-        border-top-color: #ffffff;
-        border-radius: 50%;
-        animation: btnLoadingSpinner 0.8s ease infinite;
-    }
-    
-    @keyframes btnLoadingSpinner {
-        from {
-            transform: rotate(0turn);
-        }
-        to {
-            transform: rotate(1turn);
-        }
-    }
-`;
-document.head.appendChild(loadingStyle);

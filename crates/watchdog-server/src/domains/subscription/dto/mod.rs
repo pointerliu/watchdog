@@ -26,3 +26,9 @@ pub struct UserSubscriptionsResponse {
     pub user_id: String,
     pub subscription_ids: Vec<String>,
 }
+
+#[derive(Deserialize)]
+pub struct RemoveSubscriptionRequest {
+    pub user_id: String,
+    pub subscription_id: String,
+}

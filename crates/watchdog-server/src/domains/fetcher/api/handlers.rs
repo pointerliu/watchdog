@@ -8,7 +8,7 @@ use crate::common::dto::ApiResponse;
 use crate::common::utils::check_duplicate_name;
 use crate::domains::fetcher::dto::{AddFetcherRequest, RemoveFetcherRequest};
 use watchdog_service::arxiv::criteria::ArxivCriteria;
-use watchdog_service::arxiv::fetcher::{ArxivFetcher, ArxivFetcherBuilder};
+use watchdog_service::arxiv::fetcher::ArxivFetcherBuilder;
 use watchdog_service::arxiv::model::ArxivPaper;
 
 /// Get available fetcher types

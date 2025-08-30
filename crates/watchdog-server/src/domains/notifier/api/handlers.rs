@@ -1,7 +1,6 @@
 //! Notifier API handlers
 
 use actix_web::{web, HttpResponse, Responder};
-use serde::Deserialize;
 use std::sync::Arc;
 use tracing::info;
 use watchdog_core::Notifier;
@@ -9,7 +8,7 @@ use watchdog_core::Notifier;
 use crate::common::app_state::AppState;
 use crate::common::dto::ApiResponse;
 use crate::common::utils::check_duplicate_name;
-use crate::domains::notifier::dto::AddNotifierRequest;
+use crate::domains::notifier::dto::{AddNotifierRequest, RemoveNotifierRequest};
 use crate::domains::notifier::dto::UserNotifierResponse;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
 use watchdog_service::arxiv::model::ArxivPaper;
@@ -147,12 +146,6 @@ pub async fn add_notifier(
             HttpResponse::BadRequest().json(response)
         }
     }
-}
-
-#[derive(Deserialize)]
-pub struct RemoveNotifierRequest {
-    pub user_id: String,
-    pub notifier_name: String,
 }
 
 /// Remove a notifier by name

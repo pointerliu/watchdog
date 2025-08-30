@@ -3,13 +3,14 @@
 //! This module contains the Actix-web handlers for subscription management endpoints.
 
 use actix_web::{web, HttpResponse, Responder};
-use serde::Deserialize;
 use tracing::info;
 
 use crate::common::app_state::AppState;
 use crate::common::dto::ApiResponse;
 use crate::common::utils::check_duplicate_name;
-use crate::domains::subscription::dto::{CreateSubscriptionRequest, SubscriptionResponse};
+use crate::domains::subscription::dto::{
+    CreateSubscriptionRequest, RemoveSubscriptionRequest, SubscriptionResponse,
+};
 use watchdog_core::subscription::Subscription;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
 use watchdog_service::arxiv::model::ArxivPaper;
@@ -39,8 +40,12 @@ pub async fn create_subscription(
 
     // Check if subscription with the same ID already exists
     let existing_subscription_ids = data.watchdog.get_user_subscriptions(&req.user_id).await;
-    
-    if let Some(response) = check_duplicate_name(&existing_subscription_ids, &req.subscription_id, "Subscription") {
+
+    if let Some(response) = check_duplicate_name(
+        &existing_subscription_ids,
+        &req.subscription_id,
+        "Subscription",
+    ) {
         return response;
     }
 
@@ -62,12 +67,6 @@ pub async fn create_subscription(
             HttpResponse::InternalServerError().json(api_response)
         }
     }
-}
-
-#[derive(Deserialize)]
-pub struct RemoveSubscriptionRequest {
-    pub user_id: String,
-    pub subscription_id: String,
 }
 
 /// Remove a subscription by name

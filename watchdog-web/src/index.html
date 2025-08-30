@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watchdog API Client</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="title-bar-controls">
+                <button class="close"></button>
+                <button class="minimize"></button>
+                <button class="maximize"></button>
+            </div>
+            <div class="title-bar-text">Watchdog API Client</div>
+        </div>
+        <div class="container">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h2>API Endpoints</h2>
+                </div>
+                <ul class="endpoint-list">
+                    <li class="endpoint-item active" data-endpoint="health">
+                        <i class="fas fa-heart"></i> Health Check
+                    </li>
+                    <li class="endpoint-item" data-endpoint="subscriptions">
+                        <i class="fas fa-rss"></i> Subscriptions
+                    </li>
+                    <li class="endpoint-item" data-endpoint="fetchers">
+                        <i class="fas fa-cloud-download-alt"></i> Fetchers
+                    </li>
+                    <li class="endpoint-item" data-endpoint="notifiers">
+                        <i class="fas fa-bell"></i> Notifiers
+                    </li>
+                </ul>
+            </div>
+            <div class="main-content">
+                <div class="endpoint-details active" id="health-details">
+                    <h2>Health Check</h2>
+                    <p>Check if the Watchdog API server is running.</p>
+                    <div class="form-group">
+                        <button id="health-check-btn" class="btn primary">Check Health</button>
+                    </div>
+                    <div class="response-container">
+                        <h3>Response</h3>
+                        <pre id="health-response" class="response-box"></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint-details" id="subscriptions-details">
+                    <h2>Subscriptions</h2>
+                    <div class="form-section">
+                        <h3>Get Subscriptions</h3>
+                        <div class="form-group">
+                            <label for="get-user-id">User ID</label>
+                            <input type="text" id="get-user-id" placeholder="Enter user ID">
+                        </div>
+                        <button id="get-subscriptions-btn" class="btn primary">Get Subscriptions</button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Create Subscription</h3>
+                        <div class="form-group">
+                            <label for="create-user-id">User ID</label>
+                            <input type="text" id="create-user-id" placeholder="Enter user ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="subscription-id">Subscription ID</label>
+                            <input type="text" id="subscription-id" placeholder="Enter subscription ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="keywords">Keywords (comma separated)</label>
+                            <input type="text" id="keywords" placeholder="Enter keywords">
+                        </div>
+                        <button id="create-subscription-btn" class="btn primary">Create Subscription</button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Delete Subscription</h3>
+                        <div class="form-group">
+                            <label for="delete-user-id">User ID</label>
+                            <input type="text" id="delete-user-id" placeholder="Enter user ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="delete-subscription-id">Subscription ID</label>
+                            <input type="text" id="delete-subscription-id" placeholder="Enter subscription ID">
+                        </div>
+                        <button id="delete-subscription-btn" class="btn danger">Delete Subscription</button>
+                    </div>
+                    
+                    <div class="response-container">
+                        <h3>Response</h3>
+                        <pre id="subscriptions-response" class="response-box"></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint-details" id="fetchers-details">
+                    <h2>Fetchers</h2>
+                    <div class="form-section">
+                        <h3>Get Fetcher Types</h3>
+                        <button id="get-fetcher-types-btn" class="btn primary">Get Fetcher Types</button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Get User Fetchers</h3>
+                        <div class="form-group">
+                            <label for="get-fetchers-user-id">User ID</label>
+                            <input type="text" id="get-fetchers-user-id" placeholder="Enter user ID">
+                        </div>
+                        <button id="get-fetchers-btn" class="btn primary">Get Fetchers</button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Add New Fetcher</h3>
+                        <div class="form-group">
+                            <label for="add-fetcher-user-id">User ID</label>
+                            <input type="text" id="add-fetcher-user-id" placeholder="Enter user ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="fetcher-name">Fetcher Name</label>
+                            <input type="text" id="fetcher-name" placeholder="Enter fetcher name">
+                        </div>
+                        <div class="form-group">
+                            <label for="fetcher-type">Fetcher Type</label>
+                            <select id="fetcher-type">
+                                <option value="ArxivFetcher">ArxivFetcher</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="fetcher-subscription-id">Subscription ID</label>
+                            <input type="text" id="fetcher-subscription-id" placeholder="Enter subscription ID">
+                        </div>
+                        <button id="add-fetcher-btn" class="btn primary">Add Fetcher</button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Delete Fetcher</h3>
+                        <div class="form-group">
+                            <label for="delete-fetcher-user-id">User ID</label>
+                            <input type="text" id="delete-fetcher-user-id" placeholder="Enter user ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="fetcher-name-delete">Fetcher Name</label>
+                            <input type="text" id="fetcher-name-delete" placeholder="Enter fetcher name">
+                        </div>
+                        <button id="delete-fetcher-btn" class="btn danger">Delete Fetcher</button>
+                    </div>
+                    
+                    <div class="response-container">
+                        <h3>Response</h3>
+                        <pre id="fetchers-response" class="response-box"></pre>
+                    </div>
+                </div>
+
+                <div class="endpoint-details" id="notifiers-details">
+                    <h2>Notifiers</h2>
+                    <div class="form-section">
+                        <h3>Get Notifier Types</h3>
+                        <button id="get-notifier-types-btn" class="btn primary">Get Notifier Types</button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Get User Notifiers</h3>
+                        <div class="form-group">
+                            <label for="get-notifiers-user-id">User ID</label>
+                            <input type="text" id="get-notifiers-user-id" placeholder="Enter user ID">
+                        </div>
+                        <button id="get-notifiers-btn" class="btn primary">Get Notifiers</button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Add New Notifier</h3>
+                        <div class="form-group">
+                            <label for="add-notifier-user-id">User ID</label>
+                            <input type="text" id="add-notifier-user-id" placeholder="Enter user ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="notifier-name">Notifier Name</label>
+                            <input type="text" id="notifier-name" placeholder="Enter notifier name">
+                        </div>
+                        <div class="form-group">
+                            <label for="notifier-type">Notifier Type</label>
+                            <select id="notifier-type">
+                                <option value="ArxivConsoleNotifier">ArxivConsoleNotifier</option>
+                                <option value="ArxivEmailNotifier">ArxivEmailNotifier</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="email-field" style="display: none;">
+                            <label for="email-address">Email Address</label>
+                            <input type="email" id="email-address" placeholder="Enter email address">
+                        </div>
+                        <button id="add-notifier-btn" class="btn primary">Add Notifier</button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Delete Notifier</h3>
+                        <div class="form-group">
+                            <label for="delete-notifier-user-id">User ID</label>
+                            <input type="text" id="delete-notifier-user-id" placeholder="Enter user ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="notifier-name-delete">Notifier Name</label>
+                            <input type="text" id="notifier-name-delete" placeholder="Enter notifier name">
+                        </div>
+                        <button id="delete-notifier-btn" class="btn danger">Delete Notifier</button>
+                    </div>
+                    
+                    <div class="response-container">
+                        <h3>Response</h3>
+                        <pre id="notifiers-response" class="response-box"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,8 +1,6 @@
 use crate::{Subscription, SubscriptionCriteria};
 use actix::prelude::*;
-use log::debug;
 use std::collections::HashMap;
-use std::fmt::Debug;
 use std::marker::PhantomData;
 
 /// Message to add a subscription

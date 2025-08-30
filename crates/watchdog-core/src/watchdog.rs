@@ -13,7 +13,6 @@ use std::hash::Hash;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{mpsc, RwLock};
-use tracing::error;
 
 /// Configuration for the Watchdog system
 #[derive(Debug, Clone)]

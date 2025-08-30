@@ -1,5 +1,4 @@
 use crate::{FetchResult, Notification, Notifier, SubscriptionManager};
-use actix::dev::MessageResponse;
 use actix::prelude::*;
 use dashmap::DashMap;
 use std::sync::Arc;

@@ -17,5 +17,5 @@ curl -X POST "127.0.0.1:8080/api/v1/notifiers" \
 curl -X GET "127.0.0.1:8080/api/v1/notifiers/lzz" && echo "\n"
 
 
-curl -X DELETE "127.0.0.1:8080/api/v1/notifiers/lzz/email_1" && echo "\n"
+#curl -X DELETE "127.0.0.1:8080/api/v1/notifiers/lzz/email_1" && echo "\n"
 curl -X GET "127.0.0.1:8080/api/v1/notifiers/lzz" && echo "\n"

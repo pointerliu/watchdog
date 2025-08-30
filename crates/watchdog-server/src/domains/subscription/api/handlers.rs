@@ -8,6 +8,7 @@ use tracing::info;
 
 use crate::common::app_state::AppState;
 use crate::common::dto::ApiResponse;
+use crate::common::utils::check_duplicate_name;
 use crate::domains::subscription::dto::{CreateSubscriptionRequest, SubscriptionResponse};
 use watchdog_core::subscription::Subscription;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
@@ -35,6 +36,13 @@ pub async fn create_subscription(
         "Creating subscription for user: {}, name: {}",
         req.user_id, req.subscription_id
     );
+
+    // Check if subscription with the same ID already exists
+    let existing_subscription_ids = data.watchdog.get_user_subscriptions(&req.user_id).await;
+    
+    if let Some(response) = check_duplicate_name(&existing_subscription_ids, &req.subscription_id, "Subscription") {
+        return response;
+    }
 
     let criteria = ArxivCriteria::new(req.subscription_id.clone(), req.keywords.clone());
     let subscription = Subscription::new(req.user_id.clone(), criteria);

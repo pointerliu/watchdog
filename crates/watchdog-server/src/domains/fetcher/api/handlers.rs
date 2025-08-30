@@ -1,11 +1,11 @@
 //! Fetcher API handlers
 
 use actix_web::{web, HttpResponse, Responder};
-use serde::Deserialize;
 use tracing::info;
 
 use crate::common::app_state::AppState;
 use crate::common::dto::ApiResponse;
+use crate::common::utils::check_duplicate_name;
 use crate::domains::fetcher::dto::{AddFetcherRequest, RemoveFetcherRequest};
 use watchdog_service::arxiv::criteria::ArxivCriteria;
 use watchdog_service::arxiv::model::ArxivPaper;
@@ -58,6 +58,20 @@ pub async fn add_fetcher(
         let response: ApiResponse<()> =
             ApiResponse::error(400, "Unsupported fetcher type".to_string());
         return HttpResponse::BadRequest().json(response);
+    }
+
+    // Check if fetcher with the same name already exists
+    match data.watchdog.get_user_fetchers(&req.user_id).await {
+        Ok(existing_fetchers) => {
+            if let Some(response) = check_duplicate_name(&existing_fetchers, &req.fetcher_name, "Fetcher") {
+                return response;
+            }
+        }
+        Err(e) => {
+            let response: ApiResponse<()> =
+                ApiResponse::error(500, format!("Failed to check existing fetchers: {}", e));
+            return HttpResponse::InternalServerError().json(response);
+        }
     }
 
     // Create a default ArxivFetcher

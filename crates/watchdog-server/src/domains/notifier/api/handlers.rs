@@ -8,6 +8,7 @@ use watchdog_core::Notifier;
 
 use crate::common::app_state::AppState;
 use crate::common::dto::ApiResponse;
+use crate::common::utils::check_duplicate_name;
 use crate::domains::notifier::dto::AddNotifierRequest;
 use crate::domains::notifier::dto::UserNotifierResponse;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
@@ -60,6 +61,20 @@ pub async fn add_notifier(
         "Adding notifier for user: {}, name: {}, type: {}",
         req.user_id, req.notifier_name, req.notifier_type
     );
+
+    // Check if notifier with the same name already exists
+    match data.watchdog.get_user_notifiers(&req.user_id).await {
+        Ok(existing_notifier_names) => {
+            if let Some(response) = check_duplicate_name(&existing_notifier_names, &req.notifier_name, "Notifier") {
+                return response;
+            }
+        }
+        Err(e) => {
+            let response: ApiResponse<()> =
+                ApiResponse::error(500, format!("Failed to check existing notifiers: {}", e));
+            return HttpResponse::InternalServerError().json(response);
+        }
+    }
 
     match req.notifier_type.as_str() {
         "ArxivConsoleNotifier" => {

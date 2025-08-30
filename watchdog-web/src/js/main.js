@@ -1,5 +1,5 @@
 // API Client for Watchdog
-const API_BASE_URL = 'http://localhost:8080'; // Default URL, change as needed
+const API_BASE_URL = ''; // Use same origin (proxy through Express server)
 
 // DOM Elements
 const endpointItems = document.querySelectorAll('.endpoint-item');
@@ -27,10 +27,26 @@ endpointItems.forEach(item => {
 // Health Check
 document.getElementById('health-check-btn').addEventListener('click', async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/`, {
+        const response = await fetch(`${API_BASE_URL}/health`, {
             method: 'GET'
         });
-        const data = await response.json();
+        
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Try to parse as JSON
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            // If not JSON, get as text
+            const text = await response.text();
+            throw new Error(`Expected JSON but received: ${text.substring(0, 100)}...`);
+        }
+        
         document.getElementById('health-response').textContent = JSON.stringify(data, null, 2);
     } catch (error) {
         document.getElementById('health-response').textContent = `Error: ${error.message}`;
@@ -49,8 +65,33 @@ document.getElementById('get-subscriptions-btn').addEventListener('click', async
         const response = await fetch(`${API_BASE_URL}/api/v1/subscriptions/${userId}`, {
             method: 'GET'
         });
-        const data = await response.json();
-        document.getElementById('subscriptions-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Handle case where user has no subscriptions (404)
+        if (response.status === 404) {
+            document.getElementById('subscriptions-response').textContent = "No subscriptions found for this user.";
+            return;
+        }
+        
+        // Check if the response is OK for other cases
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Handle empty response
+        const text = await response.text();
+        if (!text) {
+            document.getElementById('subscriptions-response').textContent = "No subscriptions found for this user.";
+            return;
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = JSON.parse(text);
+            document.getElementById('subscriptions-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            document.getElementById('subscriptions-response').textContent = `Expected JSON but received: ${text.substring(0, 100)}...`;
+        }
     } catch (error) {
         document.getElementById('subscriptions-response').textContent = `Error: ${error.message}`;
     }
@@ -82,8 +123,21 @@ document.getElementById('create-subscription-btn').addEventListener('click', asy
             },
             body: JSON.stringify(requestBody)
         });
-        const data = await response.json();
-        document.getElementById('subscriptions-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            document.getElementById('subscriptions-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            const text = await response.text();
+            document.getElementById('subscriptions-response').textContent = text || "Subscription created successfully.";
+        }
     } catch (error) {
         document.getElementById('subscriptions-response').textContent = `Error: ${error.message}`;
     }
@@ -102,8 +156,21 @@ document.getElementById('delete-subscription-btn').addEventListener('click', asy
         const response = await fetch(`${API_BASE_URL}/api/v1/subscriptions/${userId}/${subscriptionId}`, {
             method: 'DELETE'
         });
-        const data = await response.json();
-        document.getElementById('subscriptions-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            document.getElementById('subscriptions-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            const text = await response.text();
+            document.getElementById('subscriptions-response').textContent = text || "Subscription deleted successfully.";
+        }
     } catch (error) {
         document.getElementById('subscriptions-response').textContent = `Error: ${error.message}`;
     }
@@ -115,8 +182,21 @@ document.getElementById('get-fetcher-types-btn').addEventListener('click', async
         const response = await fetch(`${API_BASE_URL}/api/v1/fetchers/types`, {
             method: 'GET'
         });
-        const data = await response.json();
-        document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            const text = await response.text();
+            document.getElementById('fetchers-response').textContent = text || "No fetcher types found.";
+        }
     } catch (error) {
         document.getElementById('fetchers-response').textContent = `Error: ${error.message}`;
     }
@@ -133,8 +213,33 @@ document.getElementById('get-fetchers-btn').addEventListener('click', async () =
         const response = await fetch(`${API_BASE_URL}/api/v1/fetchers/${userId}`, {
             method: 'GET'
         });
-        const data = await response.json();
-        document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Handle case where user has no fetchers (404)
+        if (response.status === 404) {
+            document.getElementById('fetchers-response').textContent = "No fetchers found for this user.";
+            return;
+        }
+        
+        // Check if the response is OK for other cases
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Handle empty response
+        const text = await response.text();
+        if (!text) {
+            document.getElementById('fetchers-response').textContent = "No fetchers found for this user.";
+            return;
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = JSON.parse(text);
+            document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            document.getElementById('fetchers-response').textContent = `Expected JSON but received: ${text.substring(0, 100)}...`;
+        }
     } catch (error) {
         document.getElementById('fetchers-response').textContent = `Error: ${error.message}`;
     }
@@ -166,8 +271,21 @@ document.getElementById('add-fetcher-btn').addEventListener('click', async () =>
             },
             body: JSON.stringify(requestBody)
         });
-        const data = await response.json();
-        document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            const text = await response.text();
+            document.getElementById('fetchers-response').textContent = text || "Fetcher added successfully.";
+        }
     } catch (error) {
         document.getElementById('fetchers-response').textContent = `Error: ${error.message}`;
     }
@@ -186,8 +304,21 @@ document.getElementById('delete-fetcher-btn').addEventListener('click', async ()
         const response = await fetch(`${API_BASE_URL}/api/v1/fetchers/${userId}/${fetcherName}`, {
             method: 'DELETE'
         });
-        const data = await response.json();
-        document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            document.getElementById('fetchers-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            const text = await response.text();
+            document.getElementById('fetchers-response').textContent = text || "Fetcher deleted successfully.";
+        }
     } catch (error) {
         document.getElementById('fetchers-response').textContent = `Error: ${error.message}`;
     }
@@ -209,8 +340,21 @@ document.getElementById('get-notifier-types-btn').addEventListener('click', asyn
         const response = await fetch(`${API_BASE_URL}/api/v1/notifiers/types`, {
             method: 'GET'
         });
-        const data = await response.json();
-        document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            const text = await response.text();
+            document.getElementById('notifiers-response').textContent = text || "No notifier types found.";
+        }
     } catch (error) {
         document.getElementById('notifiers-response').textContent = `Error: ${error.message}`;
     }
@@ -227,8 +371,33 @@ document.getElementById('get-notifiers-btn').addEventListener('click', async () 
         const response = await fetch(`${API_BASE_URL}/api/v1/notifiers/${userId}`, {
             method: 'GET'
         });
-        const data = await response.json();
-        document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Handle case where user has no notifiers (404)
+        if (response.status === 404) {
+            document.getElementById('notifiers-response').textContent = "No notifiers found for this user.";
+            return;
+        }
+        
+        // Check if the response is OK for other cases
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Handle empty response
+        const text = await response.text();
+        if (!text) {
+            document.getElementById('notifiers-response').textContent = "No notifiers found for this user.";
+            return;
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = JSON.parse(text);
+            document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            document.getElementById('notifiers-response').textContent = `Expected JSON but received: ${text.substring(0, 100)}...`;
+        }
     } catch (error) {
         document.getElementById('notifiers-response').textContent = `Error: ${error.message}`;
     }
@@ -268,8 +437,21 @@ document.getElementById('add-notifier-btn').addEventListener('click', async () =
             },
             body: JSON.stringify(requestBody)
         });
-        const data = await response.json();
-        document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            const text = await response.text();
+            document.getElementById('notifiers-response').textContent = text || "Notifier added successfully.";
+        }
     } catch (error) {
         document.getElementById('notifiers-response').textContent = `Error: ${error.message}`;
     }
@@ -288,8 +470,21 @@ document.getElementById('delete-notifier-btn').addEventListener('click', async (
         const response = await fetch(`${API_BASE_URL}/api/v1/notifiers/${userId}/${notifierName}`, {
             method: 'DELETE'
         });
-        const data = await response.json();
-        document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+        
+        // Check if the response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Try to parse as JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            document.getElementById('notifiers-response').textContent = JSON.stringify(data, null, 2);
+        } else {
+            const text = await response.text();
+            document.getElementById('notifiers-response').textContent = text || "Notifier deleted successfully.";
+        }
     } catch (error) {
         document.getElementById('notifiers-response').textContent = `Error: ${error.message}`;
     }

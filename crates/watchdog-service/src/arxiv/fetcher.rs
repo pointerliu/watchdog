@@ -17,7 +17,7 @@ pub struct ArxivFetcher {
 impl Default for ArxivFetcher {
     fn default() -> Self {
         Self {
-            query: "machine learning".to_string(),
+            query: "default query of fetcher".to_string(),
             number: 5,
         }
     }

@@ -1,6 +1,7 @@
 //! Fetcher API handlers
 
 use actix_web::{web, HttpResponse, Responder};
+use serde::Deserialize;
 use tracing::info;
 
 use crate::common::app_state::AppState;
@@ -80,17 +81,37 @@ pub async fn add_fetcher(
     }
 }
 
+#[derive(Deserialize)]
+pub struct RemoveFetcherRequest {
+    pub user_id: String,
+    pub fetcher_name: String,
+}
+
 /// Remove a fetcher by name
 pub async fn remove_fetcher(
-    _data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
-    path: web::Path<String>,
+    data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
+    path: web::Path<RemoveFetcherRequest>,
 ) -> impl Responder {
-    let fetcher_name = path.into_inner();
-    info!("Removing fetcher: {}", fetcher_name);
+    let req = path.into_inner();
+    info!(
+        "Removing fetcher {} for user {}",
+        req.fetcher_name, req.user_id
+    );
 
-    // Currently the watchdog-core doesn't have a remove_fetcher method
-    // We'll return a success response for now
-    let response: ApiResponse<()> =
-        ApiResponse::success_with_message(format!("Fetcher '{}' removal requested", fetcher_name));
-    HttpResponse::Ok().json(response)
+    match data
+        .watchdog
+        .remove_fetcher(&req.user_id, &req.fetcher_name)
+        .await
+    {
+        Ok(_) => {
+            let response: ApiResponse<()> =
+                ApiResponse::success_with_message("Fetcher removed successfully".to_string());
+            HttpResponse::Ok().json(response)
+        }
+        Err(e) => {
+            let response: ApiResponse<()> =
+                ApiResponse::error(500, format!("Failed to remove fetcher: {}", e));
+            HttpResponse::InternalServerError().json(response)
+        }
+    }
 }

@@ -10,5 +10,5 @@ pub fn fetcher_routes(cfg: &mut web::ServiceConfig) {
         .route("/fetchers/types", web::get().to(get_fetcher_types))
         .route("/fetchers/{user_id}", web::get().to(get_user_fetchers))
         .route("/fetchers", web::post().to(add_fetcher))
-        .route("/fetchers/{name}", web::delete().to(remove_fetcher));
+        .route("/fetchers/{user_id}/{fetcher_name}", web::delete().to(remove_fetcher));
 }

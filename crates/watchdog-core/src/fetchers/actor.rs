@@ -1,5 +1,6 @@
 use crate::{FetchResult, Fetcher};
 use actix::prelude::*;
+use dashmap::DashMap;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -12,6 +13,7 @@ use tracing::{error, info};
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct AddFetcher<T: Clone + Send + Sync + 'static> {
+    pub user_id: String,
     pub name: String,
     pub fetcher: Box<dyn Fetcher<T> + Send + Sync>,
 }
@@ -20,6 +22,7 @@ pub struct AddFetcher<T: Clone + Send + Sync + 'static> {
 #[derive(Message)]
 #[rtype(result = "Option<()>")]
 pub struct RemoveFetcher {
+    pub user_id: String,
     pub name: String,
 }
 
@@ -47,6 +50,7 @@ pub struct SetSender<T: Clone + Send + Sync + 'static> {
 
 /// Actor implementation for FetcherManager
 pub struct FetcherActor<T> {
+    user_fetcher_mapping: DashMap<String, Vec<String>>,
     fetchers: Arc<RwLock<HashMap<String, Box<dyn Fetcher<T> + Send + Sync>>>>,
     interval_duration: Duration,
     running: bool,
@@ -60,6 +64,7 @@ where
 {
     pub fn new(interval_duration: Duration, thread_count: usize) -> Self {
         Self {
+            user_fetcher_mapping: DashMap::new(),
             fetchers: Arc::new(RwLock::new(HashMap::new())),
             interval_duration,
             running: false,
@@ -94,13 +99,20 @@ where
 
     fn handle(&mut self, msg: AddFetcher<T>, _ctx: &mut Self::Context) -> Self::Result {
         let fetchers = self.fetchers.clone();
+        let user_id = msg.user_id;
         let name = msg.name;
         let fetcher = msg.fetcher;
+
+        let mut mapping = self
+            .user_fetcher_mapping
+            .entry(user_id.clone())
+            .or_insert(Vec::new());
+        mapping.push(name.clone());
 
         // Handle async operation in a spawn
         actix::spawn(async move {
             let mut fetchers = fetchers.write().await;
-            fetchers.insert(name, fetcher);
+            fetchers.insert(name.clone(), fetcher);
         });
     }
 }
@@ -113,7 +125,12 @@ where
 
     fn handle(&mut self, msg: RemoveFetcher, _ctx: &mut Self::Context) -> Self::Result {
         let fetchers = self.fetchers.clone();
+        let user_id = msg.user_id;
         let name = msg.name;
+
+        self.user_fetcher_mapping
+            .entry(user_id.clone())
+            .and_modify(|fetchers| fetchers.retain(|fetcher| fetcher != &name));
 
         actix::spawn(async move {
             let mut fetchers = fetchers.write().await;

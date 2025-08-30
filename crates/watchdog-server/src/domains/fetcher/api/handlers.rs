@@ -6,8 +6,8 @@ use tracing::info;
 use crate::common::app_state::AppState;
 use crate::common::dto::ApiResponse;
 use crate::domains::fetcher::dto::AddFetcherRequest;
-use watchdog_service::arxiv::model::ArxivPaper;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
+use watchdog_service::arxiv::model::ArxivPaper;
 
 /// Get available fetcher types
 pub async fn get_fetcher_types(
@@ -34,29 +34,27 @@ pub async fn add_fetcher(
 
     // Currently only support ArxivFetcher
     if req.fetcher_type != "ArxivFetcher" {
-        let response: ApiResponse<()> = ApiResponse::error(400, "Unsupported fetcher type".to_string());
+        let response: ApiResponse<()> =
+            ApiResponse::error(400, "Unsupported fetcher type".to_string());
         return HttpResponse::BadRequest().json(response);
     }
 
     // Create a default ArxivFetcher
     let fetcher = watchdog_service::arxiv::fetcher::ArxivFetcher::default();
 
-    match data.watchdog.add_fetcher(
-        req.user_id.clone(),
-        req.fetcher_name.clone(),
-        Box::new(fetcher)
-    ).await {
+    match data
+        .watchdog
+        .add_fetcher(&req.user_id, &req.fetcher_name, Box::new(fetcher))
+        .await
+    {
         Ok(_) => {
-            let response: ApiResponse<()> = ApiResponse::success_with_message(
-                "Fetcher added successfully".to_string()
-            );
+            let response: ApiResponse<()> =
+                ApiResponse::success_with_message("Fetcher added successfully".to_string());
             HttpResponse::Ok().json(response)
         }
         Err(e) => {
-            let response: ApiResponse<()> = ApiResponse::error(
-                500,
-                format!("Failed to add fetcher: {}", e)
-            );
+            let response: ApiResponse<()> =
+                ApiResponse::error(500, format!("Failed to add fetcher: {}", e));
             HttpResponse::InternalServerError().json(response)
         }
     }
@@ -72,8 +70,7 @@ pub async fn remove_fetcher(
 
     // Currently the watchdog-core doesn't have a remove_fetcher method
     // We'll return a success response for now
-    let response: ApiResponse<()> = ApiResponse::success_with_message(
-        format!("Fetcher '{}' removal requested", fetcher_name)
-    );
+    let response: ApiResponse<()> =
+        ApiResponse::success_with_message(format!("Fetcher '{}' removal requested", fetcher_name));
     HttpResponse::Ok().json(response)
 }

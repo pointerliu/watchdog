@@ -119,7 +119,7 @@ async fn test_fetcher_manager() {
     let fetcher = TestFetcher::new(vec!["test data".to_string()]);
 
     fetcher_manager
-        .add_fetcher("test".to_string(), Box::new(fetcher))
+        .add_fetcher("test", "fetcher_1", Box::new(fetcher))
         .await;
 
     // Start the manager

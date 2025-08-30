@@ -40,18 +40,10 @@ async fn main() -> Result<(), FrameworkError> {
 
     // Add fetchers to the watchdog
     watchdog
-        .add_fetcher(
-            "user1".to_string(),
-            "arxiv_ml".to_string(),
-            Box::new(ml_fetcher),
-        )
+        .add_fetcher("user1", "arxiv_ml", Box::new(ml_fetcher))
         .await?;
     watchdog
-        .add_fetcher(
-            "user2".to_string(),
-            "arxiv_rust".to_string(),
-            Box::new(rust_fetcher),
-        )
+        .add_fetcher("user2", "arxiv_rust", Box::new(rust_fetcher))
         .await?;
 
     // Create notifiers for users

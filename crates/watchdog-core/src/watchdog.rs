@@ -85,11 +85,18 @@ where
     /// Add a fetcher to the system
     pub async fn add_fetcher(
         &self,
-        user_id: String,
-        name: String,
+        user_id: &str,
+        name: &str,
         fetcher: Box<dyn Fetcher<T> + Send + Sync>,
     ) -> Result<(), FrameworkError> {
-        self.fetcher_manager.add_fetcher(name, fetcher).await;
+        self.fetcher_manager
+            .add_fetcher(user_id, name, fetcher)
+            .await;
+        Ok(())
+    }
+
+    pub async fn remove_fetcher(&self, user_id: &str, name: &str) -> Result<(), FrameworkError> {
+        self.fetcher_manager.remove_fetcher(user_id, name).await;
         Ok(())
     }
 

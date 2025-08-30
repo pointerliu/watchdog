@@ -109,10 +109,10 @@ async fn main() -> Result<(), FrameworkError> {
 
     // Add fetchers to the watchdog
     watchdog
-        .add_fetcher("user1".to_string(), "news1".to_string(), Box::new(fetcher1))
+        .add_fetcher("user1", "news1", Box::new(fetcher1))
         .await?;
     watchdog
-        .add_fetcher("user2".to_string(), "news2".to_string(), Box::new(fetcher2))
+        .add_fetcher("user2", "news2", Box::new(fetcher2))
         .await?;
 
     // Create notifiers for users

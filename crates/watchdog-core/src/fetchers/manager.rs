@@ -26,18 +26,28 @@ impl<T: Clone + Send + Sync + 'static> FetcherManager<T> {
     }
 
     /// Add a fetcher to the manager
-    pub async fn add_fetcher(&self, name: String, fetcher: Box<dyn Fetcher<T> + Send + Sync>) {
+    pub async fn add_fetcher(
+        &self,
+        user_id: &str,
+        name: &str,
+        fetcher: Box<dyn Fetcher<T> + Send + Sync>,
+    ) {
         self.actor_address
-            .send(AddFetcher { name, fetcher })
+            .send(AddFetcher {
+                user_id: user_id.to_string(),
+                name: name.to_string(),
+                fetcher,
+            })
             .await
             .unwrap_or_else(|e| error!("Failed to add fetcher: {}", e));
     }
 
     /// Remove a fetcher from the manager
-    pub async fn remove_fetcher(&self, name: &str) -> Option<()> {
+    pub async fn remove_fetcher(&self, user_id: &str, name: &str) -> Option<()> {
         let result = self
             .actor_address
             .send(RemoveFetcher {
+                user_id: user_id.to_string(),
                 name: name.to_string(),
             })
             .await

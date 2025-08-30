@@ -21,3 +21,4 @@ watchdog-service = { path = "../watchdog-service" }
 thiserror = "1.0"
 async-trait = "0.1"
 derive_more = "0.99"
+dotenv = "0.15.0"

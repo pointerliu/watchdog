@@ -1,16 +1,17 @@
 //! Notifier API handlers
 
 use actix_web::{web, HttpResponse, Responder};
-use tracing::info;
+use serde::Deserialize;
 use std::sync::Arc;
+use tracing::info;
 use watchdog_core::Notifier;
 
 use crate::common::app_state::AppState;
 use crate::common::dto::ApiResponse;
 use crate::domains::notifier::dto::AddNotifierRequest;
 use crate::domains::notifier::dto::UserNotifierResponse;
-use watchdog_service::arxiv::model::ArxivPaper;
 use watchdog_service::arxiv::criteria::ArxivCriteria;
+use watchdog_service::arxiv::model::ArxivPaper;
 use watchdog_service::arxiv::notifier::{ArxivConsoleNotifier, ArxivEmailNotifier};
 
 /// Get available notifier types
@@ -18,34 +19,36 @@ pub async fn get_notifier_types(
     _data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
 ) -> impl Responder {
     info!("Getting available notifier types");
-    
+
     // For now, we support ArxivConsoleNotifier and ArxivEmailNotifier
     let notifier_types = vec![
         "ArxivConsoleNotifier".to_string(),
         "ArxivEmailNotifier".to_string(),
     ];
-    
+
     let response = ApiResponse::success(notifier_types);
     HttpResponse::Ok().json(response)
 }
 
 /// Get user's current notifiers
 pub async fn get_user_notifiers(
-    _data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
+    data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
     path: web::Path<String>,
 ) -> impl Responder {
     let user_id = path.into_inner();
     info!("Getting notifier for user: {}", user_id);
-    
-    // For now, we'll return a mock response
-    let response = UserNotifierResponse {
-        user_id,
-        notifier_name: "default_notifier".to_string(),
-        notifier_type: "ArxivConsoleNotifier".to_string(),
-    };
-    
-    let api_response = ApiResponse::success(response);
-    HttpResponse::Ok().json(api_response)
+
+    match data.watchdog.get_user_notifiers(&user_id).await {
+        Ok(data) => {
+            let api_response = ApiResponse::success(data);
+            HttpResponse::Ok().json(api_response)
+        }
+        Err(e) => {
+            let response: ApiResponse<Vec<UserNotifierResponse>> =
+                ApiResponse::error(500, format!("Failed to get notifiers: {}", e));
+            HttpResponse::InternalServerError().json(response)
+        }
+    }
 }
 
 /// Add a new notifier
@@ -57,27 +60,26 @@ pub async fn add_notifier(
         "Adding notifier for user: {}, name: {}, type: {}",
         req.user_id, req.notifier_name, req.notifier_type
     );
-    
+
     match req.notifier_type.as_str() {
         "ArxivConsoleNotifier" => {
             let mut notifier = ArxivConsoleNotifier::default();
             notifier.set_name(req.notifier_name.clone());
-            
-            match data.watchdog.add_notifier(
-                req.user_id.clone(),
-                Arc::new(notifier)
-            ).await {
+
+            match data
+                .watchdog
+                .add_notifier(req.user_id.clone(), Arc::new(notifier))
+                .await
+            {
                 Ok(_) => {
                     let response: ApiResponse<()> = ApiResponse::success_with_message(
-                        "Console notifier added successfully".to_string()
+                        "Console notifier added successfully".to_string(),
                     );
                     HttpResponse::Ok().json(response)
                 }
                 Err(e) => {
-                    let response: ApiResponse<()> = ApiResponse::error(
-                        500, 
-                        format!("Failed to add console notifier: {}", e)
-                    );
+                    let response: ApiResponse<()> =
+                        ApiResponse::error(500, format!("Failed to add console notifier: {}", e));
                     HttpResponse::InternalServerError().json(response)
                 }
             }
@@ -87,21 +89,22 @@ pub async fn add_notifier(
                 match ArxivEmailNotifier::new(&req.notifier_name, email_address.clone()) {
                     Ok(mut notifier) => {
                         notifier.set_name(req.notifier_name.clone());
-                        
-                        match data.watchdog.add_notifier(
-                            req.user_id.clone(),
-                            Arc::new(notifier)
-                        ).await {
+
+                        match data
+                            .watchdog
+                            .add_notifier(req.user_id.clone(), Arc::new(notifier))
+                            .await
+                        {
                             Ok(_) => {
                                 let response: ApiResponse<()> = ApiResponse::success_with_message(
-                                    "Email notifier added successfully".to_string()
+                                    "Email notifier added successfully".to_string(),
                                 );
                                 HttpResponse::Ok().json(response)
                             }
                             Err(e) => {
                                 let response: ApiResponse<()> = ApiResponse::error(
-                                    500, 
-                                    format!("Failed to add email notifier: {}", e)
+                                    500,
+                                    format!("Failed to add email notifier: {}", e),
                                 );
                                 HttpResponse::InternalServerError().json(response)
                             }
@@ -109,42 +112,50 @@ pub async fn add_notifier(
                     }
                     Err(e) => {
                         let response: ApiResponse<()> = ApiResponse::error(
-                            500, 
-                            format!("Failed to create email notifier: {}", e)
+                            500,
+                            format!("Failed to create email notifier: {}", e),
                         );
                         HttpResponse::InternalServerError().json(response)
                     }
                 }
             } else {
                 let response: ApiResponse<()> = ApiResponse::error(
-                    400, 
-                    "Email address is required for email notifier".to_string()
+                    400,
+                    "Email address is required for email notifier".to_string(),
                 );
                 HttpResponse::BadRequest().json(response)
             }
         }
         _ => {
-            let response: ApiResponse<()> = ApiResponse::error(
-                400, 
-                "Unsupported notifier type".to_string()
-            );
+            let response: ApiResponse<()> =
+                ApiResponse::error(400, "Unsupported notifier type".to_string());
             HttpResponse::BadRequest().json(response)
         }
     }
 }
 
+#[derive(Deserialize)]
+pub struct RemoveNotifierRequest {
+    pub user_id: String,
+    pub notifier_name: String,
+}
+
 /// Remove a notifier by name
 pub async fn remove_notifier(
     _data: web::Data<AppState<ArxivPaper, ArxivCriteria>>,
-    path: web::Path<String>,
+    path: web::Path<RemoveNotifierRequest>,
 ) -> impl Responder {
-    let notifier_name = path.into_inner();
-    info!("Removing notifier: {}", notifier_name);
-    
+    let req = path.into_inner();
+    info!(
+        "Removing notifier {} for user {}",
+        req.notifier_name, req.user_id
+    );
+
     // Currently the watchdog-core doesn't have a remove_notifier method
     // We'll return a success response for now
-    let response: ApiResponse<()> = ApiResponse::success_with_message(
-        format!("Notifier '{}' removal requested", notifier_name)
-    );
+    let response: ApiResponse<()> = ApiResponse::success_with_message(format!(
+        "Notifier '{}' removal requested",
+        req.notifier_name
+    ));
     HttpResponse::Ok().json(response)
 }

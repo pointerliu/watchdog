@@ -5,6 +5,7 @@
 
 use actix_web::web::Data;
 use actix_web::{middleware::Logger, App, HttpServer};
+use dotenv::dotenv;
 use tracing::info;
 
 use watchdog_server::common::app_state::AppState;
@@ -17,6 +18,7 @@ use watchdog_service::arxiv::model::ArxivPaper;
 async fn main() -> std::io::Result<()> {
     // Initialize tracing
     tracing_subscriber::fmt::init();
+    dotenv().ok();
 
     info!("Starting Watchdog API server");
 

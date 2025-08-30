@@ -2477,6 +2477,7 @@ dependencies = [
  "actix-web",
  "async-trait",
  "derive_more 0.99.20",
+ "dotenv",
  "serde",
  "serde_json",
  "thiserror",

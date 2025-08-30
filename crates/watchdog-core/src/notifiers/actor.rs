@@ -1,4 +1,5 @@
 use crate::{FetchResult, Notification, Notifier, SubscriptionManager};
+use actix::dev::MessageResponse;
 use actix::prelude::*;
 use dashmap::DashMap;
 use std::sync::Arc;
@@ -32,6 +33,12 @@ pub struct RemoveNotifier {
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct RemoveAllNotifiers {
+    pub user_id: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "Vec<String>")]
+pub struct GetUserNotifiers {
     pub user_id: String,
 }
 
@@ -218,6 +225,36 @@ where
         }
 
         info!("Removed notifier '{}' for user {}", notifier_name, user_id);
+    }
+}
+
+impl<T: Clone, C: crate::SubscriptionCriteria + 'static> Handler<GetUserNotifiers>
+    for NotifierActor<T, C>
+where
+    T: Clone + Send + Sync + 'static,
+    C::Content: Clone + std::fmt::Debug + Unpin + Send + Sync + 'static,
+    C::Id: Send + Sync + Unpin + 'static,
+    C: Send + Sync + Clone + Unpin + 'static,
+{
+    type Result = MessageResult<GetUserNotifiers>;
+
+    fn handle(&mut self, msg: GetUserNotifiers, _ctx: &mut Self::Context) -> Self::Result {
+        let user_id = msg.user_id;
+
+        let res = self
+            .user_notifiers
+            .get(&user_id)
+            .map(|notifiers| {
+                notifiers
+                    .value()
+                    .iter()
+                    .cloned()
+                    .map(|notifier| notifier.name().to_string())
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or(vec![]);
+
+        MessageResult(res)
     }
 }
 

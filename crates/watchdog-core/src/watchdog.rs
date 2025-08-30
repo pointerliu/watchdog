@@ -94,13 +94,13 @@ where
             .await;
         Ok(())
     }
-    
+
     /// Remove a fetcher for user
     pub async fn remove_fetcher(&self, user_id: &str, name: &str) -> Result<(), FrameworkError> {
         self.fetcher_manager.remove_fetcher(user_id, name).await;
         Ok(())
     }
-    
+
     /// Get all fetchers of user
     pub async fn get_user_fetchers(&self, user_id: &str) -> Result<Vec<String>, FrameworkError> {
         let fetchers = self.fetcher_manager.get_user_fetchers(user_id).await;
@@ -115,6 +115,11 @@ where
     ) -> Result<(), FrameworkError> {
         self.notifier_manager.add_notifier(user_id, notifier).await;
         Ok(())
+    }
+
+    pub async fn get_user_notifiers(&self, user_id: &str) -> Result<Vec<String>, FrameworkError> {
+        let res = self.notifier_manager.get_user_notifiers(user_id).await;
+        Ok(res)
     }
 
     /// Add a subscription to the system

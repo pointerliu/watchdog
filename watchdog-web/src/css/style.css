@@ -538,6 +538,96 @@ body {
   text-align: right;
 }
 
+/* Table Styles */
+.table-container {
+  margin: 20px 0;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.table-header h3 {
+  font-size: 18px;
+  color: var(--macos-text);
+  margin: 0;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--macos-gray);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px var(--shadow-color);
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--macos-border);
+  color: var(--macos-text);
+}
+
+.data-table th {
+  background-color: rgba(0, 122, 255, 0.1);
+  font-weight: 600;
+  color: var(--macos-blue);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.action-cell {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn.danger {
+  background-color: var(--macos-red);
+  color: white;
+}
+
+.action-btn.danger:hover {
+  background-color: #ff453a;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.empty-message {
+  text-align: center;
+  padding: 20px;
+  color: var(--macos-text-light);
+  font-style: italic;
+}
+
+/* Form section visibility */
+.form-section {
+  display: none;
+}
+
+.form-section.active {
+  display: block;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .container {
@@ -557,6 +647,21 @@ body {
   .modal-content {
     width: 90%;
     margin: 20% auto;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .data-table {
+    font-size: 12px;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 8px 10px;
   }
 }
 

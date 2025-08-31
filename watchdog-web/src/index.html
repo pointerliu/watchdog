@@ -55,45 +55,42 @@
 
                 <div class="endpoint-details" id="subscriptions-details">
                     <h2>Subscriptions</h2>
-                    <div class="form-section">
-                        <h3>Get Subscriptions</h3>
-                        <div class="form-group">
-                            <label for="get-user-id">User ID</label>
-                            <input type="text" id="get-user-id" placeholder="Enter user ID">
-                        </div>
-                        <button id="get-subscriptions-btn" class="btn primary">Get Subscriptions</button>
+                    <div class="form-group">
+                        <label for="subscriptions-user-id">User ID</label>
+                        <input type="text" id="subscriptions-user-id" placeholder="Enter user ID">
+                        <button id="load-subscriptions-btn" class="btn primary">Load Subscriptions</button>
                     </div>
-                    
-                    <div class="form-section">
-                        <h3>Create Subscription</h3>
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3>Subscriptions</h3>
+                            <button id="add-subscription-btn" class="btn primary"><i class="fas fa-plus"></i> Add Subscription</button>
+                        </div>
+                        <table id="subscriptions-table" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Subscription ID</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Subscription rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                        <div id="subscriptions-empty" class="empty-message">No subscriptions found</div>
+                    </div>
+                    <div class="form-section" id="add-subscription-form">
+                        <h3>Add New Subscription</h3>
                         <div class="form-group">
-                            <label for="create-user-id">User ID</label>
-                            <input type="text" id="create-user-id" placeholder="Enter user ID">
+                            <label for="new-subscription-id">Subscription ID</label>
+                            <input type="text" id="new-subscription-id" placeholder="Enter subscription ID">
                         </div>
                         <div class="form-group">
-                            <label for="subscription-id">Subscription ID</label>
-                            <input type="text" id="subscription-id" placeholder="Enter subscription ID">
-                        </div>
-                        <div class="form-group">
-                            <label for="keywords">Keywords (comma separated)</label>
-                            <input type="text" id="keywords" placeholder="Enter keywords">
+                            <label for="new-keywords">Keywords (comma separated)</label>
+                            <input type="text" id="new-keywords" placeholder="Enter keywords">
                         </div>
                         <button id="create-subscription-btn" class="btn primary">Create Subscription</button>
+                        <button id="cancel-subscription-btn" class="btn">Cancel</button>
                     </div>
-                    
-                    <div class="form-section">
-                        <h3>Delete Subscription</h3>
-                        <div class="form-group">
-                            <label for="delete-user-id">User ID</label>
-                            <input type="text" id="delete-user-id" placeholder="Enter user ID">
-                        </div>
-                        <div class="form-group">
-                            <label for="delete-subscription-id">Subscription ID</label>
-                            <input type="text" id="delete-subscription-id" placeholder="Enter subscription ID">
-                        </div>
-                        <button id="delete-subscription-btn" class="btn danger">Delete Subscription</button>
-                    </div>
-                    
                     <div class="response-container">
                         <h3>Response</h3>
                         <pre id="subscriptions-response" class="response-box"></pre>
@@ -102,56 +99,48 @@
 
                 <div class="endpoint-details" id="fetchers-details">
                     <h2>Fetchers</h2>
-                    <div class="form-section">
-                        <h3>Get Fetcher Types</h3>
-                        <button id="get-fetcher-types-btn" class="btn primary">Get Fetcher Types</button>
+                    <div class="form-group">
+                        <label for="fetchers-user-id">User ID</label>
+                        <input type="text" id="fetchers-user-id" placeholder="Enter user ID">
+                        <button id="load-fetchers-btn" class="btn primary">Load Fetchers</button>
                     </div>
-                    
-                    <div class="form-section">
-                        <h3>Get User Fetchers</h3>
-                        <div class="form-group">
-                            <label for="get-fetchers-user-id">User ID</label>
-                            <input type="text" id="get-fetchers-user-id" placeholder="Enter user ID">
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3>Fetchers</h3>
+                            <button id="add-fetcher-btn" class="btn primary"><i class="fas fa-plus"></i> Add Fetcher</button>
                         </div>
-                        <button id="get-fetchers-btn" class="btn primary">Get Fetchers</button>
+                        <table id="fetchers-table" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fetcher Name</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Fetcher rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                        <div id="fetchers-empty" class="empty-message">No fetchers found</div>
                     </div>
-                    
-                    <div class="form-section">
+                    <div class="form-section" id="add-fetcher-form">
                         <h3>Add New Fetcher</h3>
                         <div class="form-group">
-                            <label for="add-fetcher-user-id">User ID</label>
-                            <input type="text" id="add-fetcher-user-id" placeholder="Enter user ID">
+                            <label for="new-fetcher-name">Fetcher Name</label>
+                            <input type="text" id="new-fetcher-name" placeholder="Enter fetcher name">
                         </div>
                         <div class="form-group">
-                            <label for="fetcher-name">Fetcher Name</label>
-                            <input type="text" id="fetcher-name" placeholder="Enter fetcher name">
-                        </div>
-                        <div class="form-group">
-                            <label for="fetcher-type">Fetcher Type</label>
-                            <select id="fetcher-type">
+                            <label for="new-fetcher-type">Fetcher Type</label>
+                            <select id="new-fetcher-type">
                                 <option value="ArxivFetcher">ArxivFetcher</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="fetcher-subscription-id">Subscription ID</label>
-                            <input type="text" id="fetcher-subscription-id" placeholder="Enter subscription ID">
+                            <label for="new-fetcher-subscription-id">Subscription ID</label>
+                            <input type="text" id="new-fetcher-subscription-id" placeholder="Enter subscription ID">
                         </div>
-                        <button id="add-fetcher-btn" class="btn primary">Add Fetcher</button>
+                        <button id="create-fetcher-btn" class="btn primary">Add Fetcher</button>
+                        <button id="cancel-fetcher-btn" class="btn">Cancel</button>
                     </div>
-                    
-                    <div class="form-section">
-                        <h3>Delete Fetcher</h3>
-                        <div class="form-group">
-                            <label for="delete-fetcher-user-id">User ID</label>
-                            <input type="text" id="delete-fetcher-user-id" placeholder="Enter user ID">
-                        </div>
-                        <div class="form-group">
-                            <label for="fetcher-name-delete">Fetcher Name</label>
-                            <input type="text" id="fetcher-name-delete" placeholder="Enter fetcher name">
-                        </div>
-                        <button id="delete-fetcher-btn" class="btn danger">Delete Fetcher</button>
-                    </div>
-                    
                     <div class="response-container">
                         <h3>Response</h3>
                         <pre id="fetchers-response" class="response-box"></pre>
@@ -160,57 +149,49 @@
 
                 <div class="endpoint-details" id="notifiers-details">
                     <h2>Notifiers</h2>
-                    <div class="form-section">
-                        <h3>Get Notifier Types</h3>
-                        <button id="get-notifier-types-btn" class="btn primary">Get Notifier Types</button>
+                    <div class="form-group">
+                        <label for="notifiers-user-id">User ID</label>
+                        <input type="text" id="notifiers-user-id" placeholder="Enter user ID">
+                        <button id="load-notifiers-btn" class="btn primary">Load Notifiers</button>
                     </div>
-                    
-                    <div class="form-section">
-                        <h3>Get User Notifiers</h3>
-                        <div class="form-group">
-                            <label for="get-notifiers-user-id">User ID</label>
-                            <input type="text" id="get-notifiers-user-id" placeholder="Enter user ID">
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3>Notifiers</h3>
+                            <button id="add-notifier-btn" class="btn primary"><i class="fas fa-plus"></i> Add Notifier</button>
                         </div>
-                        <button id="get-notifiers-btn" class="btn primary">Get Notifiers</button>
+                        <table id="notifiers-table" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Notifier Name</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Notifier rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                        <div id="notifiers-empty" class="empty-message">No notifiers found</div>
                     </div>
-                    
-                    <div class="form-section">
+                    <div class="form-section" id="add-notifier-form">
                         <h3>Add New Notifier</h3>
                         <div class="form-group">
-                            <label for="add-notifier-user-id">User ID</label>
-                            <input type="text" id="add-notifier-user-id" placeholder="Enter user ID">
+                            <label for="new-notifier-name">Notifier Name</label>
+                            <input type="text" id="new-notifier-name" placeholder="Enter notifier name">
                         </div>
                         <div class="form-group">
-                            <label for="notifier-name">Notifier Name</label>
-                            <input type="text" id="notifier-name" placeholder="Enter notifier name">
-                        </div>
-                        <div class="form-group">
-                            <label for="notifier-type">Notifier Type</label>
-                            <select id="notifier-type">
+                            <label for="new-notifier-type">Notifier Type</label>
+                            <select id="new-notifier-type">
                                 <option value="ArxivConsoleNotifier">ArxivConsoleNotifier</option>
                                 <option value="ArxivEmailNotifier">ArxivEmailNotifier</option>
                             </select>
                         </div>
-                        <div class="form-group" id="email-field" style="display: none;">
-                            <label for="email-address">Email Address</label>
-                            <input type="email" id="email-address" placeholder="Enter email address">
+                        <div class="form-group" id="new-email-field" style="display: none;">
+                            <label for="new-email-address">Email Address</label>
+                            <input type="email" id="new-email-address" placeholder="Enter email address">
                         </div>
-                        <button id="add-notifier-btn" class="btn primary">Add Notifier</button>
+                        <button id="create-notifier-btn" class="btn primary">Add Notifier</button>
+                        <button id="cancel-notifier-btn" class="btn">Cancel</button>
                     </div>
-                    
-                    <div class="form-section">
-                        <h3>Delete Notifier</h3>
-                        <div class="form-group">
-                            <label for="delete-notifier-user-id">User ID</label>
-                            <input type="text" id="delete-notifier-user-id" placeholder="Enter user ID">
-                        </div>
-                        <div class="form-group">
-                            <label for="notifier-name-delete">Notifier Name</label>
-                            <input type="text" id="notifier-name-delete" placeholder="Enter notifier name">
-                        </div>
-                        <button id="delete-notifier-btn" class="btn danger">Delete Notifier</button>
-                    </div>
-                    
                     <div class="response-container">
                         <h3>Response</h3>
                         <pre id="notifiers-response" class="response-box"></pre>
